@@ -5,7 +5,7 @@ Novo projeto para conclusão de curso
 
 -Arquitetura de microserviços  
 -Frontend: Angular  
--BackEnd: A definir  
+-BackEnd: SpringBoot 
 -Microserviços: FastAPI  
 -Banco: PostGreSQL  
 -LLM para transcrição: A definir  
