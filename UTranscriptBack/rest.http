@@ -1,0 +1,31 @@
+### Health Check
+GET http://localhost:8080/auth/healthcheck
+
+### Registrar novo usuário
+POST http://localhost:8080/auth/registrar
+Content-Type: application/json
+
+{
+  "nome": "Fulano da Silva",
+  "email": "fulano2@example.com",
+  "senha": "senha123",
+  "papel": "ALUNO"
+}
+
+### Login
+# @name login
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "email": "fulano2@example.com",
+  "senha": "senha123"
+}
+
+### Obter informações do usuário (requer autenticação)
+GET http://localhost:8080/auth/user
+Authorization: Bearer {{login.response.body.token}}
+
+### Teste com token inválido
+GET http://localhost:8080/auth/user
+Authorization: Bearer token.invalido
