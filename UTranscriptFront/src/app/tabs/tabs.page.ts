@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { LoginService } from '../services/login.service';
 
 @Component({
   selector: 'app-tabs',
@@ -8,6 +9,17 @@ import { Component } from '@angular/core';
 })
 export class TabsPage {
 
-  constructor() {}
+  constructor(private loginService: LoginService) {}
+
+
+  logout() {
+    try {
+      this.loginService.logout();
+      window.location.href = '/login'; // ou use o Router para redirecionar
+    } catch (err) {
+      console.error('Erro ao deslogar', err);
+      alert('Erro ao deslogar. Tente novamente.');
+    }
+  }
 
 }

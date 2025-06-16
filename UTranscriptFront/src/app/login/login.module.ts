@@ -1,9 +1,11 @@
 import { IonicModule } from '@ionic/angular';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LoginComponent  } from './login.component';
 import { ExploreContainerComponentModule } from '../explore-container/explore-container.module';
+import { LoginRoutingModule } from './login-routing.module';
+import { HttpClientModule } from '@angular/common/http';
 
 
 @NgModule({
@@ -12,8 +14,11 @@ import { ExploreContainerComponentModule } from '../explore-container/explore-co
     CommonModule,
     FormsModule,
     ExploreContainerComponentModule,
-    LoginComponent
+    ReactiveFormsModule,
+    LoginRoutingModule,
+    HttpClientModule
   ],
-  declarations: [LoginComponent]
+  declarations: [LoginComponent],
+  exports: [LoginComponent]
 })
 export class LoginComponentModule {}

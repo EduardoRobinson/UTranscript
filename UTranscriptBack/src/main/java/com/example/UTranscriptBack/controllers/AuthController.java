@@ -3,6 +3,7 @@ package com.example.UTranscriptBack.controllers;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +22,7 @@ import com.example.UTranscriptBack.dto.LoginDTO;
 
 @RestController
 @RequestMapping("/auth")
+
 public class AuthController {
        @Autowired
     private AuthService authService;
@@ -42,6 +44,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDTO dto) {
+        System.out.println(dto);
         UserModel user = authService.autenticar(dto);
         String token = jwtService.gerarToken(user.getEmail());
         return ResponseEntity.ok(Map.of("token", token));

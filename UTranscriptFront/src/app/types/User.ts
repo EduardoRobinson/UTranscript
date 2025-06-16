@@ -1,6 +1,13 @@
-export interface User {
-  id?: number;
-  name: string;
+export interface LoginRequest {
   email: string;
-  age: number; 
+  senha: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: {
+    id: number;
+    nome: string;
+    email: string;
+  };
 }

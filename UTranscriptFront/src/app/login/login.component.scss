@@ -1,0 +1,8 @@
+.form-container {
+  height: 100%;
+  display: flex;
+  justify-content: center;  // centraliza horizontalmente
+  align-items: center;      // centraliza verticalmente
+  flex-direction: column;
+  padding: 0 16px;
+}

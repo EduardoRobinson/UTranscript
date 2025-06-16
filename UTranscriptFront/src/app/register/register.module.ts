@@ -11,9 +11,9 @@ import { ExploreContainerComponentModule } from '../explore-container/explore-co
     IonicModule,
     CommonModule,
     FormsModule,
-    ExploreContainerComponentModule,
-    RegisterComponent 
+    ExploreContainerComponentModule
   ],
-  declarations: [RegisterComponent ]
+  declarations: [RegisterComponent ],
+  exports: [RegisterComponent]
 })
 export class RegisterComponentModule {}
