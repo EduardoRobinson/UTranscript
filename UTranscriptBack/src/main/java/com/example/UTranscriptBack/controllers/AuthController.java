@@ -38,8 +38,8 @@ public class AuthController {
    
     @PostMapping("/registrar")
     public ResponseEntity<?> registrar(@RequestBody RegistroDTO dto) {
-        authService.registrar(dto);
-        return ResponseEntity.ok("Usuário registrado com sucesso");
+        UserModel user=authService.registrar(dto);
+        return ResponseEntity.ok(Map.of("message", "Usuário registrado com sucesso","user", user));
     }
 
     @PostMapping("/login")

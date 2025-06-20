@@ -14,12 +14,12 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public void registrar(RegistroDTO dto) {
+    public UserModel registrar(RegistroDTO dto) {
         UserModel user = new UserModel();
         user.setNome(dto.nome());
         user.setEmail(dto.email());
         user.setSenha(passwordEncoder.encode(dto.senha()));
-        usuarioRepo.save(user);
+        return usuarioRepo.save(user);
     }
 
     public UserModel autenticar(LoginDTO dto) {
