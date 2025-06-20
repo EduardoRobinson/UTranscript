@@ -6,6 +6,7 @@ import { LoginComponent  } from './login.component';
 import { ExploreContainerComponentModule } from '../explore-container/explore-container.module';
 import { LoginRoutingModule } from './login-routing.module';
 import { HttpClientModule } from '@angular/common/http';
+import { RegisterComponentModule } from '../register/register.module';
 
 
 @NgModule({
@@ -16,7 +17,8 @@ import { HttpClientModule } from '@angular/common/http';
     ExploreContainerComponentModule,
     ReactiveFormsModule,
     LoginRoutingModule,
-    HttpClientModule
+    HttpClientModule,
+    RegisterComponentModule
   ],
   declarations: [LoginComponent],
   exports: [LoginComponent]

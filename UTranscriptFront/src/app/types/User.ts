@@ -11,3 +11,17 @@ export interface LoginResponse {
     email: string;
   };
 }
+
+export interface RegisterRequest {
+  nome: string;
+  email: string;
+  senha: string;
+}
+export interface RegisterResponse {
+  message: string;
+  user: {
+    id: number;
+    nome: string;
+    email: string;
+  };
+}

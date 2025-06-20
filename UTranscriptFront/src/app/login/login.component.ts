@@ -39,4 +39,11 @@ export class LoginComponent  implements OnInit {
     }
 
   }
+
+  navigateToRegister(){
+    console.log('➡️ Indo pra /register');
+  setTimeout(() => {
+    this.router.navigate(['/register']);
+  }, 0);
+  }
 }

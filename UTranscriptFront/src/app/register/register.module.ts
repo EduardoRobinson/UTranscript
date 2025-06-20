@@ -1,9 +1,11 @@
 import { IonicModule } from '@ionic/angular';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RegisterComponent  } from './register.component';
 import { ExploreContainerComponentModule } from '../explore-container/explore-container.module';
+import { RegisterRoutingModule } from './register-routing.module';
+import { RegisterService } from '../services/register.service';
 
 
 @NgModule({
@@ -11,9 +13,11 @@ import { ExploreContainerComponentModule } from '../explore-container/explore-co
     IonicModule,
     CommonModule,
     FormsModule,
-    ExploreContainerComponentModule
+    ExploreContainerComponentModule,
+    ReactiveFormsModule,
+    RegisterRoutingModule
   ],
   declarations: [RegisterComponent ],
-  exports: [RegisterComponent]
+  exports: [RegisterComponent],
 })
 export class RegisterComponentModule {}
