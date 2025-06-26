@@ -9,6 +9,7 @@ import pdfkit
 from jinja2 import Environment, FileSystemLoader
 from llama_cpp import Llama
 
+
 load_dotenv()
 
 class Transcricao():
@@ -106,8 +107,7 @@ class Transcricao():
         if not os.path.exists(output_pdf_path):
             raise FileNotFoundError(f"O arquivo PDF não foi gerado: {output_pdf_path}")
         os.remove(temp_html_path)
-        
-      
+
         
 
         

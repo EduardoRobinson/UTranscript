@@ -1,0 +1,7 @@
+ion-item {
+  ion-label {
+    top: -6px; // ou -8px se quiser mais
+    font-size: 0.95rem; // opcional: pra dar aquela afinada fina
+    color: var(--ion-color-primary); // opcional: pra dar um destaque
+  }
+}

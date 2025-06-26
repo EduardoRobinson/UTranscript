@@ -1,0 +1,16 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Baixar Vídeo</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-item>
+    <ion-label position="floating">URL do YouTube</ion-label>
+    <ion-input [(ngModel)]="videoUrl" type="url" placeholder="Cole aqui a URL do video"></ion-input>
+  </ion-item>
+
+  <ion-button expand="block" color="primary" (click)="downloadVideo()" [disabled]="!videoUrl">
+    Baixar Vídeo
+  </ion-button>
+</ion-content>

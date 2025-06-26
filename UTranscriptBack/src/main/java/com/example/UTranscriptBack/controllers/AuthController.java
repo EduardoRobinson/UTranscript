@@ -1,9 +1,10 @@
 package com.example.UTranscriptBack.controllers;
 
 import java.util.Map;
+
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -56,12 +57,8 @@ public class AuthController {
     }
 
     @GetMapping("/user")
-    public ResponseEntity<?> getUser() {
+    public ResponseEntity<?> getUser(Authentication authentication) {
         String token = request.getHeader("Authorization");
-
-        if (token == null || !token.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body("Token não fornecido ou inválido");
-        }
 
         String jwt = token.substring(7);
         String email = jwtService.extrairEmail(jwt);
