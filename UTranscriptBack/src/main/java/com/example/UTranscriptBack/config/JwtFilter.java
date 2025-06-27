@@ -18,32 +18,42 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@Component 
-public class JwtFilter extends OncePerRequestFilter{
+@Component
+public class JwtFilter extends OncePerRequestFilter {
     private UserRepository usuarioRepo;
     private JwtService jwtService;
 
-   
-    public JwtFilter(UserRepository usuarioRepo,JwtService jwtService) {
+    public JwtFilter(UserRepository usuarioRepo, JwtService jwtService) {
         this.usuarioRepo = usuarioRepo;
         this.jwtService = jwtService;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws ServletException, IOException {
 
         String token = request.getHeader("Authorization");
+
         if (token != null && token.startsWith("Bearer ")) {
             String jwt = token.substring(7);
-            String email = jwtService.extrairEmail(jwt);
-            UserModel usuario = usuarioRepo.findByEmail(email).orElse(null);
-            if (usuario != null) {
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(usuario, null, List.of());
-                SecurityContextHolder.getContext().setAuthentication(auth);
+            try {
+                String email = jwtService.extrairEmail(jwt);
+                UserModel usuario = usuarioRepo.findByEmail(email).orElse(null);
+
+                if (usuario != null) {
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(usuario, null,
+                            List.of());
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
+
+            } catch (Exception e) {
+            
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\": \"Token inválido ou expirado.\"}");
+                return;
             }
         }
 
