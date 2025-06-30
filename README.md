@@ -1,7 +1,7 @@
 # TCC
 Novo projeto para conclusão de curso
 
-# Plataforma para transcrição e resumo de video aulas  
+# UTranscript --> Plataforma para transcrição e resumo de video aulas 
 
 -Arquitetura de microserviços  
 -Frontend: Angular  
