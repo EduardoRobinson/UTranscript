@@ -32,4 +32,8 @@ public class VideoAulaModel {
     @ManyToOne
     @JoinColumn(name = "tema_id")
     private TemaModel tema;
+
+    @ManyToOne
+    @JoinColumn(name = "usuario_id")
+    private UserModel usuario;
 }

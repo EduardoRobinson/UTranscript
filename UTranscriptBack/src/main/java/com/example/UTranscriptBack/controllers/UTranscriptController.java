@@ -7,7 +7,6 @@ import org.springframework.http.MediaType;
 import java.util.List;
 
 import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -26,14 +25,11 @@ import com.example.UTranscriptBack.models.CursoModel;
 import com.example.UTranscriptBack.models.TemaModel;
 import com.example.UTranscriptBack.models.UniversidadeModel;
 import com.example.UTranscriptBack.models.VideoAulaModel;
-import com.example.UTranscriptBack.repositories.UserRepository;
 import com.example.UTranscriptBack.services.CursoService;
-import com.example.UTranscriptBack.services.JwtService;
 import com.example.UTranscriptBack.services.TemaService;
 import com.example.UTranscriptBack.services.UniversidadeService;
 import com.example.UTranscriptBack.services.VideoAulaService;
 
-import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 public class UTranscriptController {
@@ -48,11 +44,6 @@ public class UTranscriptController {
 
     private UniversidadeService universidadeService;
 
-    @Autowired
-    private JwtService jwtService;
-
-    @Autowired
-    private HttpServletRequest request;
 
     public UTranscriptController(VideoAulaService service, TemaService temaService, CursoService cursoService,
             UniversidadeService universidadeService) {
@@ -96,24 +87,19 @@ public class UTranscriptController {
         }
     }
 
-    @PostMapping("videoAula")
-    public ResponseEntity<?> criar(@RequestBody VideoAulaDTO dto) {
+    @PostMapping("/videoAula")
+    public ResponseEntity<?> criar(@RequestBody VideoAulaDTO dto,Authentication authentication) {
         VideoAulaModel v = service.create(dto);
         return ResponseEntity.ok(v);
     }
 
     @GetMapping("/cursos")
     public List<CursoModel> cursos(Authentication authentication) {
-        String token = request.getHeader("Authorization");
-
-        String jwt = token.substring(7);
-        String email = jwtService.extrairEmail(jwt);
-        System.out.println(email);
         return cursoService.findAll();
     }
 
     @GetMapping("/temas/{id}")
-    public List<TemaModel> getTemasPorCurso(@PathVariable Long id) {
+    public List<TemaModel> getTemasPorCurso(@PathVariable Long id,Authentication authentication) {
         return temaService.findByCursoId(id);
     }
 
@@ -121,4 +107,5 @@ public class UTranscriptController {
     public List<UniversidadeModel> universidades(Authentication authentication) {
         return universidadeService.findAll();
     }
+
 }

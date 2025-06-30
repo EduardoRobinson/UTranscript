@@ -7,8 +7,8 @@ Content-Type: application/json
 
 {
   "nome": "Fulano da Silva",
-  "email": "fulano3@example.com",
-  "senha": "senha123",
+  "email": "biro@example.com",
+  "senha": "20203232",
   "papel": "ALUNO"
 }
 
@@ -18,8 +18,8 @@ POST http://localhost:8080/auth/login
 Content-Type: application/json
 
 {
-  "email": "fulano3@example.com",
-  "senha": "senha123"
+  "email": "biro@example.com",
+  "senha": "20203232"
 }
 
 ### Obter informações do usuário (requer autenticação)
