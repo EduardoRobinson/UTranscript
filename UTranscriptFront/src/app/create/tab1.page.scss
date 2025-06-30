@@ -1,0 +1,16 @@
+.videoaula-card {
+  margin: 0 auto; // Centraliza o card
+  padding: 16px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 75px;
+}
+
+ion-card-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+

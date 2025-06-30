@@ -14,7 +14,6 @@ export class LoginService {
   constructor(private http: HttpClient) {}
 
   login(data: LoginRequest): Observable<LoginResponse> {
-    console.log(data);
     return this.http.post<LoginResponse>(this.apiUrl, data).pipe(
       tap((response: LoginResponse) => {
         localStorage.setItem('token', response.token);

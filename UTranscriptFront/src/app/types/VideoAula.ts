@@ -4,7 +4,7 @@ export type FormVideoAula = {
   cursoId:number;
   professor:string;
   universidadeId:number;
-  temasId: number[];
+  temaId: number;
   data:Date;
 }
 
@@ -18,6 +18,7 @@ export type Transcript = {
 export type Universidade = {
     id?: number;
     nome: string;
+    sigla: string;
 }
 
 export type Curso = {
@@ -36,10 +37,11 @@ export type VideoAula = {
     titulo: string;
     cursoId: number;
     universidadeId: number;
-    temasId: string[];
+    temaId: number;
+    professor: string;
     data: Date;
     curso?: Curso;
     universidade?: Universidade;
-    temas?: Tema[];
+    tema?: Tema;
 }
 

@@ -22,5 +22,9 @@ public class TemaService {
         return repo.findAll().stream()
                    .filter(tema -> tema.getCurso().getId().equals(cursoId))
                    .toList();
-    }       
+    }      
+    
+    public TemaModel findById(Long id) {
+        return repo.findById(id).orElseThrow(() -> new RuntimeException("Tema not found"));
+    }
 }

@@ -1,0 +1,135 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Cadastro de Videoaula</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-card position="floating" class="videoaula-card">
+  <ion-card-content>
+    <form [formGroup]="formVideoAula" (ngSubmit)="salvarVideoaula()">
+      <ion-item>
+        <ion-label
+          position="floating"
+          style="font-family: 'Poppins', sans-serif; margin-bottom: 10px"
+          >Título</ion-label
+        >
+        <ion-input formControlName="titulo" type="text"></ion-input>
+      </ion-item>
+      <ion-text
+        color="danger"
+        *ngIf="formVideoAula.get('titulo')?.touched && formVideoAula.get('titulo')?.invalid"
+      >
+        Título é obrigatório
+      </ion-text>
+
+      <ion-item>
+        <ion-label
+          position="floating"
+          style="font-family: 'Poppins', sans-serif; margin-bottom: 20px"
+          >Universidade</ion-label
+        >
+        <ion-select
+          formControlName="universidadeId"
+          interface="popover"
+          placeholder="Selecione uma universidade"
+        >
+          <ion-select-option *ngFor="let uni of universidades" [value]="uni.id">
+            {{ uni.nome }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-text
+        color="danger"
+        *ngIf="formVideoAula.get('universidadeId')?.touched && formVideoAula.get('universidadeId')?.invalid"
+      >
+        Escolha uma universidade
+      </ion-text>
+
+      <ion-item>
+        <ion-label
+          position="floating"
+          style="font-family: 'Poppins', sans-serif; margin-bottom: 20px"
+          >Curso</ion-label
+        >
+        <ion-select
+          formControlName="cursoId"
+          interface="popover"
+          (ionChange)="buscarTemasPorCurso()"
+          placeholder="Selecione um curso"
+        >
+          <ion-select-option *ngFor="let curso of cursos" [value]="curso.id">
+            {{ curso.nome }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-text
+        color="danger"
+        *ngIf="formVideoAula.get('cursoId')?.touched && formVideoAula.get('cursoId')?.invalid"
+      >
+        Escolha um curso
+      </ion-text>
+
+      <ion-item>
+        <ion-label
+          position="floating"
+          style="font-family: 'Poppins', sans-serif; margin-bottom: 10px"
+          >Professor</ion-label
+        >
+        <ion-input formControlName="professor" type="text"></ion-input>
+      </ion-item>
+
+      <ion-text
+        color="danger"
+        *ngIf="formVideoAula.get('professor')?.touched && formVideoAula.get('professor')?.invalid"
+      >
+        Digite o nome do Professor
+      </ion-text>
+
+      <ion-item>
+        <ion-label
+          position="floating"
+          style="font-family: 'Poppins', sans-serif; margin-bottom: 20px"
+          >Temas</ion-label
+        >
+        <ion-select
+          formControlName="temaId"
+          interface="popover"
+          placeholder="Selecione um tema"
+        >
+          <ion-select-option
+            *ngFor="let tema of temasSugeridos"
+            [value]="tema.id"
+          >
+            {{ tema.descricao }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-text
+        color="danger"
+        *ngIf="formVideoAula.get('temaId')?.touched && formVideoAula.get('temaId')?.invalid"
+      >
+        Escolha um tema
+      </ion-text>
+
+      <ion-item>
+        <ion-label
+          position="floating"
+          style="font-family: 'Poppins', sans-serif; margin-bottom: 20px"
+          >Arquivo</ion-label
+        >
+        <input type="file" (change)="onFileSelected($event)" style="margin-top: 10px;"/>
+      </ion-item>
+
+      <ion-text color="danger" *ngIf="arquivoSelecionado === null">
+        Selecione um arquivo
+      </ion-text>
+
+      <ion-item
+        ><ion-button expand="full" type="submit" position="floating"
+          >Salvar Videoaula</ion-button
+        ></ion-item
+      >
+    </form>
+  </ion-card-content>
+</ion-card>

@@ -17,4 +17,8 @@ public class CursoService {
     public List<CursoModel> findAll() {
         return repo.findAll();
     }
+
+    public CursoModel findById(Long id) {
+        return repo.findById(id).orElseThrow(() -> new RuntimeException("Curso not found"));
+    }
 }

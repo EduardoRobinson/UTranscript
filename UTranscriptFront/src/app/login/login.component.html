@@ -8,11 +8,11 @@
   <div class="form-container">
     <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
       <ion-item>
-        <ion-label position="floating">Email</ion-label>
+        <ion-label position="floating" style="font-family: 'Poppins', sans-serif;">Email</ion-label>
         <ion-input type="email" formControlName="email" required></ion-input>
       </ion-item>
       <ion-item>
-        <ion-label position="floating">Senha</ion-label>
+        <ion-label position="floating" style="font-family: 'Poppins', sans-serif;">Senha</ion-label>
         <ion-input type="password" formControlName="senha" required></ion-input>
       </ion-item>
       <ion-button expand="block" type="submit" [disabled]="loginForm.invalid">

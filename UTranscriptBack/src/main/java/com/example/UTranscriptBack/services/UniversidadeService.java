@@ -17,4 +17,8 @@ public class UniversidadeService {
     public List<UniversidadeModel> findAll() {
         return repo.findAll();
     }
+
+    public UniversidadeModel findById(Long id) {
+        return repo.findById(id).orElseThrow(() -> new RuntimeException("Universidade not found"));
+    }
 }

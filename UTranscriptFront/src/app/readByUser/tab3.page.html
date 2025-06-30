@@ -1,0 +1,76 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>
+      Minhas video aulas cadastradas
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- Card de filtros -->
+  <ion-card class="filtro-card">
+    <ion-card-content>
+
+      <!-- Searchbar -->
+      <ion-item lines="none">
+        <ion-searchbar
+          [(ngModel)]="busca"
+          placeholder="Buscar por título"
+          (ionInput)="filtrarVideoAulas()"
+        ></ion-searchbar>
+      </ion-item>
+
+      <!-- Filtro por Tema -->
+      <ion-item lines="none">
+        <ion-label style="font-family: 'Poppins', sans-serif;">Tema</ion-label>
+        <ion-select [(ngModel)]="filtroTema" (ionChange)="filtrarVideoAulas()">
+          <ion-select-option value="">Todos</ion-select-option>
+          <ion-select-option *ngFor="let tema of temas" [value]="tema.descricao">
+            {{ tema.descricao }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <!-- Filtro por Universidade -->
+      <ion-item lines="none">
+        <ion-label style="font-family: 'Poppins', sans-serif;">Universidade</ion-label>
+        <ion-select [(ngModel)]="filtroUniversidade" (ionChange)="filtrarVideoAulas()">
+          <ion-select-option value="">Todas</ion-select-option>
+          <ion-select-option *ngFor="let uni of universidades" [value]="uni.nome">
+            {{ uni.nome }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <!-- Filtro por Curso -->
+      <ion-item lines="none">
+        <ion-label style="font-family: 'Poppins', sans-serif;">Curso</ion-label>
+        <ion-select [(ngModel)]="filtroCurso" (ionChange)="filtrarVideoAulas()">
+          <ion-select-option value="">Todos</ion-select-option>
+          <ion-select-option *ngFor="let curso of cursos" [value]="curso.nome">
+            {{ curso.nome }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Lista de videoaulas -->
+  <ion-card class="videoaula-card">
+    <ion-card-content>
+      <ion-list>
+        <ion-item *ngFor="let videoAula of videoAulasFiltradas">
+          <ion-label>
+            <h2>{{ videoAula.titulo }}</h2>
+            <p>Universidade: {{ videoAula.universidade?.nome }}</p>
+            <p>Curso: {{ videoAula.curso?.nome }}</p>
+            <p>Tema: {{ videoAula.tema?.descricao }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>
