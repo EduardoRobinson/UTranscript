@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LoginService } from '../services/login.service';
 import { LoginRequest } from '../types/User';
+import { ToastController } from '@ionic/angular';
 
 @Component({
   standalone: false,
@@ -13,7 +14,7 @@ import { LoginRequest } from '../types/User';
 export class LoginComponent  implements OnInit {
   loginForm!: FormGroup;
   constructor(private fb: FormBuilder,  private loginService: LoginService,
-    private router: Router) {}
+    private router: Router,private toastController: ToastController) {}
 
   ngOnInit() {
       this.loginForm = this.fb.group({
@@ -29,11 +30,17 @@ export class LoginComponent  implements OnInit {
 
       this.loginService.login(credentials).subscribe({
         next: () => {
+          this.presentToast('Login realizado com sucesso!', 'success');
           this.router.navigate(['/']); // redirecionar após login
         },
         error: (err) => {
           console.error('Erro ao logar', err);
-          alert('Usuário ou senha inválidos');
+          if (typeof err === 'object' && err !== null && 'error' in err) {
+            const apiErr = err as { error: any };
+            this.presentToast(apiErr.error.message || 'Erro desconhecido', 'danger');
+          } else {
+            this.presentToast('Erro ao realizar login', 'danger');
+          }
         }
       });
     }
@@ -41,9 +48,22 @@ export class LoginComponent  implements OnInit {
   }
 
   navigateToRegister(){
-    console.log('➡️ Indo pra /register');
   setTimeout(() => {
     this.router.navigate(['/register']);
   }, 0);
   }
+
+    async presentToast(
+    message: string,
+    color: 'success' | 'danger' | 'warning' = 'success'
+  ) {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      position: 'bottom',
+      color,
+    });
+    await toast.present();
+  }
+
 }

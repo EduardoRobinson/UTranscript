@@ -1,4 +1,6 @@
 package com.example.UTranscriptBack.models;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -27,6 +29,7 @@ public class TranscriptionModel {
     
     @OneToOne
     @JoinColumn (name = "video_aula_id")
+    @JsonIgnore
     private VideoAulaModel videoAula;
 
     @ManyToOne

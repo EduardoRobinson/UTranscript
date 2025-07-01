@@ -68,6 +68,8 @@
             <p>Curso: {{ videoAula.curso?.nome }}</p>
             <p>Tema: {{ videoAula.tema?.descricao }}</p>
           </ion-label>
+          <ion-icon [name]="videoAula.icone" slot="end" class="status-icon"  [color]="videoAula.corIcone"></ion-icon>
+           <p>{{videoAula.transcricoes?.status?.descricao}}</p>
         </ion-item>
       </ion-list>
     </ion-card-content>

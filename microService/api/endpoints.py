@@ -1,7 +1,7 @@
 
 from service.YoutubeService import YoutubeService
 from service.TranscriptionService import Transcricao
-from fastapi import APIRouter,Request,File, UploadFile
+from fastapi import APIRouter, Path,Request,File, UploadFile
 from fastapi.responses import FileResponse
 import os
 from fastapi import Body
@@ -13,10 +13,15 @@ async def health_check():
     """Endpoint de verificação de saúde."""
     return {"status": "ok"}
 
-@router.post("/transcricao")
-async def create_transcricao(file:UploadFile=File(...)):
-    transcricao=Transcricao()
-    return await transcricao.transcrever2(file)
+@router.post("/transcricao/{id}")
+async def create_transcricao(
+    id: int = Path(...),  # <- id vem da URL
+    file: UploadFile = File(...)  # <- file vem do corpo (multipart)
+):
+    print(f"ID recebido: {id}")
+    print(f"Nome do arquivo recebido: {file.filename}")
+    # Aqui você processa o arquivo
+    return {"msg": "Recebido com sucesso", "id": id, "filename": file.filename}
 
 
 @router.get("/meeting_pdf")

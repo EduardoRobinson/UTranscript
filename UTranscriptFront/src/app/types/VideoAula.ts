@@ -8,11 +8,15 @@ export type FormVideoAula = {
   data:Date;
 }
 
+export type StatusTranscription = {
+    id?: number;
+    descricao: string;
+}
+
 export type Transcript = {
     id?: number;
-    videoAulaId?: number;
     conteudo: string;
-    dataCriacao: Date;
+    status: StatusTranscription;
 }
 
 export type Universidade = {
@@ -43,5 +47,8 @@ export type VideoAula = {
     curso?: Curso;
     universidade?: Universidade;
     tema?: Tema;
+    transcricoes?: Transcript;
+    icone?: string;
+    corIcone?: string;
 }
 

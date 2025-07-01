@@ -22,7 +22,7 @@ export class Tab5Page {
     }
 
     const loading = await this.loadingCtrl.create({
-      message: 'Baixando vídeo, segura aí...',
+      message: 'Realizando Download...',
       spinner: 'crescent',
       backdropDismiss: false,
     });

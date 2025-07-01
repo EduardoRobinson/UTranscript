@@ -29,8 +29,8 @@ export class Tab2Page {
     this.carregarVideoAulas();
   }
 
-  ionViewWillEnter(){
-     this.carregarVideoAulas();
+  ionViewWillEnter() {
+    this.carregarVideoAulas();
   }
 
   filtrarVideoAulas() {
@@ -96,12 +96,48 @@ export class Tab2Page {
         this.carregarUniversidades();
         this.carregarCursos();
         this.carregarTemas();
+        this.videoAulas.map((videoAula) => {
+          videoAula.icone = this.carregarIconsStatus(
+            videoAula.transcricoes?.status?.descricao || 'Pendente'
+          );
+          videoAula.corIcone = this.carregarIconsStatusColor(
+            videoAula.transcricoes?.status?.descricao || 'Pendente'
+          );
+        });
       },
       error: (err) => {
         console.error('Erro ao carregar video aulas:', err);
         this.presentToast('Erro ao carregar video aulas', 'danger');
       },
     });
+  }
+
+  carregarIconsStatusColor(status: string): string {
+    switch (status) {
+      case 'Pendente':
+        return 'warning';
+      case 'Em Andamento':
+        return 'primary';
+      case 'Concluído':
+        return 'success';
+      case 'Cancelado':
+        return 'danger';
+    }
+    return 'medium'; // Default color
+  }
+
+  carregarIconsStatus(status: string): string {
+    switch (status) {
+      case 'Pendente':
+        return 'hourglass';
+      case 'Em Andamento':
+        return 'create';
+      case 'Concluído':
+        return 'checkmark-circle';
+      case 'Cancelado':
+        return 'close-circle';
+    }
+    return 'help-circle';
   }
 
   async presentToast(

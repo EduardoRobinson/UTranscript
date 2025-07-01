@@ -36,4 +36,7 @@ public class VideoAulaModel {
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private UserModel usuario;
+
+    @OneToOne(mappedBy = "videoAula")
+    private TranscriptionModel transcricoes;
 }

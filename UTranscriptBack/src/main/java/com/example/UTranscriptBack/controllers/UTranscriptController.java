@@ -4,6 +4,7 @@ import org.springframework.http.HttpHeaders;
 
 import org.springframework.http.MediaType;
 
+
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +15,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,21 +24,29 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import com.example.UTranscriptBack.dto.VideoAulaDTO;
 import com.example.UTranscriptBack.dto.YoutubeRequestDTO;
 import com.example.UTranscriptBack.models.CursoModel;
+import com.example.UTranscriptBack.models.StatusTranscriptionModel;
 import com.example.UTranscriptBack.models.TemaModel;
+import com.example.UTranscriptBack.models.TranscriptionModel;
 import com.example.UTranscriptBack.models.UniversidadeModel;
 import com.example.UTranscriptBack.models.UserModel;
 import com.example.UTranscriptBack.models.VideoAulaModel;
+import com.example.UTranscriptBack.repositories.StatusTranscriptionRepository;
 import com.example.UTranscriptBack.repositories.UserRepository;
 import com.example.UTranscriptBack.services.CursoService;
 import com.example.UTranscriptBack.services.JwtService;
 import com.example.UTranscriptBack.services.TemaService;
+import com.example.UTranscriptBack.services.TranscriptionService;
 import com.example.UTranscriptBack.services.UniversidadeService;
 import com.example.UTranscriptBack.services.VideoAulaService;
+import java.util.concurrent.ExecutorService;
 
+import io.jsonwebtoken.io.IOException;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
@@ -46,11 +56,18 @@ public class UTranscriptController {
 
     private final VideoAulaService service;
 
+    private final ExecutorService executorService = java.util.concurrent.Executors.newSingleThreadExecutor();
+
     private TemaService temaService;
 
     private CursoService cursoService;
 
     private UniversidadeService universidadeService;
+
+    private TranscriptionService transcriptionService;
+
+    private StatusTranscriptionRepository statusTranscriptionRepository;
+      
     @Autowired
     private UserRepository userRepository;
 
@@ -61,11 +78,13 @@ public class UTranscriptController {
     private JwtService jwtService;
 
     public UTranscriptController(VideoAulaService service, TemaService temaService, CursoService cursoService,
-            UniversidadeService universidadeService) {
+            UniversidadeService universidadeService, TranscriptionService transcriptionService,StatusTranscriptionRepository statusTranscriptionRepository) {
         this.service = service;
         this.temaService = temaService;
         this.cursoService = cursoService;
         this.universidadeService = universidadeService;
+        this.transcriptionService = transcriptionService;
+        this.statusTranscriptionRepository = statusTranscriptionRepository;
     }
 
     @GetMapping("/health")
@@ -115,7 +134,25 @@ public class UTranscriptController {
         }
         UserModel user = userOptional.get();
         VideoAulaModel v = service.create(dto, user);
-        System.out.println("Nome do arquivo: " + file.getOriginalFilename());
+        TranscriptionModel transcription = new TranscriptionModel();
+        transcription.setVideoAula(v);
+        transcription.setConteudo("");
+        Optional<StatusTranscriptionModel> statusOptional = statusTranscriptionRepository.findByDescricao("Pendente");
+         if(!statusOptional.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+         }       
+        StatusTranscriptionModel status = statusOptional.get();
+        transcription.setStatus(status);
+        transcription = transcriptionService.create(transcription);
+        final TranscriptionModel transcriptionFinal = transcription;
+        
+        executorService.submit(() -> {
+            try {
+                enviarArquivoParaFastAPI(transcriptionFinal.getId(), file);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
         return ResponseEntity.ok(v);
 
     }
@@ -155,6 +192,22 @@ public class UTranscriptController {
                 .filter(videoAula -> videoAula.getUsuario().getId().equals(user.getId()))
                 .toList();
 
+    }
+
+    private void enviarArquivoParaFastAPI(Long videoAulaId, MultipartFile file) throws IOException {
+        System.out.println("Enviando arquivo para FastAPI...");
+        WebClient webClient = WebClient.builder().baseUrl("http://127.0.0.1:8000").build();
+
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
+        builder.part("file", file.getResource());
+
+        webClient.post()
+                .uri("/transcricao/" + videoAulaId)
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(builder.build()))
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
     }
 
 }
