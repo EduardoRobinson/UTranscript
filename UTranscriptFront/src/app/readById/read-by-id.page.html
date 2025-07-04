@@ -1,0 +1,48 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{videoAula?.titulo}}</ion-title>
+  </ion-toolbar>
+</ion-header>
+<ion-buttons slot="start">
+  <ion-back-button defaultHref="/tabs/tab2" (click)="onBack()"></ion-back-button>
+</ion-buttons>
+<ion-content [fullscreen]="true">
+  <ion-card *ngIf="videoAula">
+    <ion-card-header>
+      <ion-card-title>{{videoAula.titulo}}</ion-card-title>
+        
+    </ion-card-header>
+    <ion-card-content>
+      <p><strong>Universidade:</strong> {{videoAula.universidade?.nome}}</p>
+      <p><strong>Curso:</strong> {{videoAula.curso?.nome}}</p>
+      <p><strong>Professor:</strong> {{videoAula.professor}}</p>
+      <p><strong>Tema:</strong> {{videoAula.tema?.descricao}}</p>
+      <p>
+        <strong>Data de Criação:</strong> {{videoAula.data| date:'dd/MM/yyyy'}}
+      </p>
+    </ion-card-content>
+  </ion-card>
+  <ion-card *ngIf="videoAula?.transcricoes">
+    <ion-card-header>
+      <ion-card-title>Transcrição</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>
+        <strong>Status:</strong> {{videoAula?.transcricoes?.status?.descricao}}
+      </p>
+      <p>
+        <strong>Conteúdo:</strong> {{videoAula?.transcricoes?.conteudo ?
+        videoAula?.transcricoes?.conteudo : 'Transcrição não realizada'}}
+      </p>
+    </ion-card-content>
+  </ion-card>
+  <ion-card>
+    <ion-card-content>
+      <ion-button (click)="exportarParaPDF()"> 
+        Exportar Conteúdo para PDF
+        <ion-icon slot="end" name="download-outline"></ion-icon>
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>

@@ -1,34 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
-    <title>Relatório</title>
-    <style>
-        .page-break {
-            page-break-before: always;
-            margin-top: 20px;
-        }
-        header, footer {
-            background-color:white;
-            color: white;
-            text-align: center;
-            padding: 10px;
-        }
-        main {
-            padding: 20px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relatório</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    header {
+      background-color: #f0f0f0;
+      padding: 30px;
+      text-align: center;
+      border-bottom: 2px solid #ccc;
+    }
+
+    header h1 {
+      margin: 0 0 15px;
+      font-size: 28px;
+      color: #222;
+    }
+
+    header p {
+      margin: 5px 0;
+      font-size: 16px;
+    }
+
+    main {
+      padding: 40px 30px;
+    }
+
+    h2 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      color: #444;
+    }
+
+    .transcription-content {
+      white-space: pre-line;
+      font-size: 16px;
+      line-height: 1.6;
+      text-align: justify;
+      border-left: 4px solid #555;
+      padding-left: 20px;
+      background-color: #fafafa;
+      padding: 20px;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+  </style>
 </head>
 <body>
 
-    <main>
-        <h2>Transcrição:</h2>
-        <h1>{{objeto.transcricao}}</h1>
-        <h2>Resposta Prompt:</h2>
-        <h1>{{objeto.respostaPrompt}}</h1>
-    </main>
+  <header>
+    <h1>Relatório de Vídeo Aula</h1>
+    <p><strong>Curso:</strong> {{ objeto.curso.nome }}</p>
+    <p><strong>Universidade:</strong> {{ objeto.universidade.nome }}</p>
+    <p><strong>Tema:</strong> {{ objeto.tema.descricao }}</p>
+    <p><strong>Título:</strong> {{ objeto.titulo }}</p>
+    <p><strong>Professor:</strong> {{ objeto.professor }}</p>
+    <p><strong>Data:</strong> {{ objeto.data.strftime('%d/%m/%Y') }}</p>
+  </header>
+
+  <main>
+    <h2>Transcrição:</h2>
+    <div class="transcription-content">
+      {{ objeto.transcricoes.conteudo }}
+    </div>
+  </main>
 
 </body>
 </html>

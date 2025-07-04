@@ -4,7 +4,6 @@ import org.springframework.http.HttpHeaders;
 
 import org.springframework.http.MediaType;
 
-
 import java.util.List;
 import java.util.Optional;
 
@@ -67,7 +66,7 @@ public class UTranscriptController {
     private TranscriptionService transcriptionService;
 
     private StatusTranscriptionRepository statusTranscriptionRepository;
-      
+
     @Autowired
     private UserRepository userRepository;
 
@@ -78,7 +77,8 @@ public class UTranscriptController {
     private JwtService jwtService;
 
     public UTranscriptController(VideoAulaService service, TemaService temaService, CursoService cursoService,
-            UniversidadeService universidadeService, TranscriptionService transcriptionService,StatusTranscriptionRepository statusTranscriptionRepository) {
+            UniversidadeService universidadeService, TranscriptionService transcriptionService,
+            StatusTranscriptionRepository statusTranscriptionRepository) {
         this.service = service;
         this.temaService = temaService;
         this.cursoService = cursoService;
@@ -138,14 +138,14 @@ public class UTranscriptController {
         transcription.setVideoAula(v);
         transcription.setConteudo("");
         Optional<StatusTranscriptionModel> statusOptional = statusTranscriptionRepository.findByDescricao("Pendente");
-         if(!statusOptional.isPresent()) {
+        if (!statusOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-         }       
+        }
         StatusTranscriptionModel status = statusOptional.get();
         transcription.setStatus(status);
         transcription = transcriptionService.create(transcription);
         final TranscriptionModel transcriptionFinal = transcription;
-        
+
         executorService.submit(() -> {
             try {
                 enviarArquivoParaFastAPI(transcriptionFinal.getId(), file);
@@ -192,6 +192,29 @@ public class UTranscriptController {
                 .filter(videoAula -> videoAula.getUsuario().getId().equals(user.getId()))
                 .toList();
 
+    }
+
+    @GetMapping("/video-aula/{id}")
+    public VideoAulaModel videoAulaPorId(@PathVariable Long id, Authentication authentication) {
+        return service.findById(id);
+    }
+
+    @PostMapping("/video-aula/pdf")
+    public ResponseEntity<byte[]> exportarParaPDF(@RequestBody VideoAulaModel videoAula, Authentication auth) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<VideoAulaModel> request = new HttpEntity<>(videoAula, headers);
+
+        ResponseEntity<byte[]> response = restTemplate
+                .postForEntity("http://127.0.0.1:8000/videoAula_pdf", request, byte[].class);
+
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(MediaType.APPLICATION_PDF);
+        responseHeaders.setContentDisposition(ContentDisposition.attachment().filename("transcricao.pdf").build());
+
+        return new ResponseEntity<>(response.getBody(), responseHeaders, HttpStatus.OK);
     }
 
     private void enviarArquivoParaFastAPI(Long videoAulaId, MultipartFile file) throws IOException {

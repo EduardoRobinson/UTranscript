@@ -87,26 +87,6 @@ class Transcricao():
         transcription = TranscriptionResponse(transcricao=result, resumo=response["choices"][0]["message"]["content"])
         return transcription
 
-    def gerar_pdf(self,Objeto):
-        print(Objeto)
-        BASE_DIR = os.path.abspath(os.path.dirname(__file__))  # Diretório do script principal
-        TEMPLATES_DIR = os.path.join(BASE_DIR, "..", "templates")  # Caminho correto para a pasta templates
-        env = Environment(loader=FileSystemLoader(TEMPLATES_DIR))
-        template = env.get_template("pdf.html")
-        html_content = template.render(objeto=Objeto)
-        temp_html_path = "temp.html"
-        with open(temp_html_path, "w", encoding="utf-8") as f:
-            f.write(html_content)
-        caminho_wkhtmltopdf = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
-        config = pdfkit.configuration(wkhtmltopdf=caminho_wkhtmltopdf)
-        options = {
-        "enable-local-file-access": "",
-        }
-        output_pdf_path = os.path.abspath("app/resumes/out.pdf")
-        pdfkit.from_file(temp_html_path, output_pdf_path,configuration=config, options=options)
-        if not os.path.exists(output_pdf_path):
-            raise FileNotFoundError(f"O arquivo PDF não foi gerado: {output_pdf_path}")
-        os.remove(temp_html_path)
 
         
 

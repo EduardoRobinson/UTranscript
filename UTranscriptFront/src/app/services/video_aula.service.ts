@@ -43,4 +43,8 @@ export class VideoAulaService {
         return this.http.get<VideoAula[]>(`${this.apiUrl}/video-aulas/user`);
     }
 
+    exportarParaPDF(videoAula: VideoAula): Observable<Blob> {
+        return this.http.post(`${this.apiUrl}/video-aula/pdf`, videoAula, { responseType: 'blob' });
+    }
+
   }

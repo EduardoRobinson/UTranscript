@@ -1,17 +1,13 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>
-      Consultar Video Aulas
-    </ion-title>
+    <ion-title> Consultar Video Aulas </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-
   <!-- Card de filtros -->
   <ion-card class="filtro-card">
     <ion-card-content>
-
       <!-- Searchbar -->
       <ion-item lines="none">
         <ion-searchbar
@@ -23,10 +19,13 @@
 
       <!-- Filtro por Tema -->
       <ion-item lines="none">
-        <ion-label style="font-family: 'Poppins', sans-serif;">Tema</ion-label>
+        <ion-label style="font-family: 'Poppins', sans-serif">Tema</ion-label>
         <ion-select [(ngModel)]="filtroTema" (ionChange)="filtrarVideoAulas()">
           <ion-select-option value="">Todos</ion-select-option>
-          <ion-select-option *ngFor="let tema of temas" [value]="tema.descricao">
+          <ion-select-option
+            *ngFor="let tema of temas"
+            [value]="tema.descricao"
+          >
             {{ tema.descricao }}
           </ion-select-option>
         </ion-select>
@@ -34,10 +33,18 @@
 
       <!-- Filtro por Universidade -->
       <ion-item lines="none">
-        <ion-label style="font-family: 'Poppins', sans-serif;">Universidade</ion-label>
-        <ion-select [(ngModel)]="filtroUniversidade" (ionChange)="filtrarVideoAulas()">
+        <ion-label style="font-family: 'Poppins', sans-serif"
+          >Universidade</ion-label
+        >
+        <ion-select
+          [(ngModel)]="filtroUniversidade"
+          (ionChange)="filtrarVideoAulas()"
+        >
           <ion-select-option value="">Todas</ion-select-option>
-          <ion-select-option *ngFor="let uni of universidades" [value]="uni.nome">
+          <ion-select-option
+            *ngFor="let uni of universidades"
+            [value]="uni.nome"
+          >
             {{ uni.nome }}
           </ion-select-option>
         </ion-select>
@@ -45,7 +52,7 @@
 
       <!-- Filtro por Curso -->
       <ion-item lines="none">
-        <ion-label style="font-family: 'Poppins', sans-serif;">Curso</ion-label>
+        <ion-label style="font-family: 'Poppins', sans-serif">Curso</ion-label>
         <ion-select [(ngModel)]="filtroCurso" (ionChange)="filtrarVideoAulas()">
           <ion-select-option value="">Todos</ion-select-option>
           <ion-select-option *ngFor="let curso of cursos" [value]="curso.nome">
@@ -53,7 +60,6 @@
           </ion-select-option>
         </ion-select>
       </ion-item>
-
     </ion-card-content>
   </ion-card>
 
@@ -61,18 +67,28 @@
   <ion-card class="videoaula-card">
     <ion-card-content>
       <ion-list>
-        <ion-item *ngFor="let videoAula of videoAulasFiltradas">
+        <ion-item
+          *ngFor="let videoAula of videoAulasFiltradas"
+          (click)="abrirVideoAula(videoAula.id)"
+          [ngStyle]="{ '--background': isHovered === videoAula.id ? '#f0f0f5' : 'white' }"
+          (mouseenter)="isHovered = videoAula.id"
+          (mouseleave)="isHovered = undefined"
+        >
           <ion-label>
             <h2>{{ videoAula.titulo }}</h2>
             <p>Universidade: {{ videoAula.universidade?.nome }}</p>
             <p>Curso: {{ videoAula.curso?.nome }}</p>
             <p>Tema: {{ videoAula.tema?.descricao }}</p>
           </ion-label>
-          <ion-icon [name]="videoAula.icone" slot="end" class="status-icon"  [color]="videoAula.corIcone"></ion-icon>
-           <p>{{videoAula.transcricoes?.status?.descricao}}</p>
+          <ion-icon
+            [name]="videoAula.icone"
+            slot="end"
+            class="status-icon"
+            [color]="videoAula.corIcone"
+          ></ion-icon>
+          <p>{{videoAula.transcricoes?.status?.descricao}}</p>
         </ion-item>
       </ion-list>
     </ion-card-content>
   </ion-card>
-
 </ion-content>

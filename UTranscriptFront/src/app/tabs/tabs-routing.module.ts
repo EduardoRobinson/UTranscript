@@ -28,6 +28,10 @@ const routes: Routes = [
         loadChildren: () => import('../youtubeDownloader/tab5.module').then(m => m.Tab5PageModule)
       },
       {
+        path: 'tab2/:id',
+        loadChildren: () => import('../readById/read-by-id.module').then(m => m.ReadByIdPageModule)
+      },
+      {
         path: '',
         redirectTo: '/tabs/tab1',
         pathMatch: 'full'

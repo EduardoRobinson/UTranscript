@@ -1,10 +1,13 @@
 
+from dto.videoAulaDTO import VideoAulaDTO
 from service.YoutubeService import YoutubeService
 from service.TranscriptionService import Transcricao
 from fastapi import APIRouter, Path,Request,File, UploadFile
 from fastapi.responses import FileResponse
 import os
 from fastapi import Body
+
+from service.pdfService import pdfService
 
 router = APIRouter()
 
@@ -24,18 +27,19 @@ async def create_transcricao(
     return {"msg": "Recebido com sucesso", "id": id, "filename": file.filename}
 
 
-@router.get("/meeting_pdf")
-def create_pdf(transcricao: Request):
+@router.post("/videoAula_pdf")
+def create_pdf(videoAula:VideoAulaDTO):
     file_path = os.path.abspath("app/resumes/out.pdf")
     if os.path.exists(file_path):
         os.remove(file_path)
-    transcricao = Transcricao()
-    transcricao.gerar_pdf(id)
+    pdf = pdfService()
+    pdf.gerar_pdf(videoAula)
     return FileResponse(
         "resumes/out.pdf",
         media_type="application/pdf",
-        filename="meeting_summary.pdf",
+        filename="videoAula_transcription.pdf",
     )
+
 
 @router.post("/youtube_download")
 async def youtube_download(data: dict = Body(...)):

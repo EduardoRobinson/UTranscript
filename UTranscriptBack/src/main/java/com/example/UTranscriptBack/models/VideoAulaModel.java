@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@ToString
 public class VideoAulaModel {
 
     @Id
@@ -39,4 +40,5 @@ public class VideoAulaModel {
 
     @OneToOne(mappedBy = "videoAula")
     private TranscriptionModel transcricoes;
+
 }
