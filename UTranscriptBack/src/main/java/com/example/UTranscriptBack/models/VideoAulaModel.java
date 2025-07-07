@@ -38,7 +38,7 @@ public class VideoAulaModel {
     @JoinColumn(name = "usuario_id")
     private UserModel usuario;
 
-    @OneToOne(mappedBy = "videoAula")
+    @OneToOne(mappedBy = "videoAula",cascade = CascadeType.ALL, orphanRemoval = true)
     private TranscriptionModel transcricoes;
 
 }

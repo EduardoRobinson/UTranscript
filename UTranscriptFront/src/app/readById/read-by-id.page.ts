@@ -12,6 +12,7 @@ import { VideoAula } from '../types/VideoAula';
 })
 export class ReadByIdPage implements OnInit {
   videoAula: VideoAula | undefined;
+  isCreator: boolean = false;
   constructor(
     private videoAulaService: VideoAulaService,
     private toastController: ToastController,
@@ -32,6 +33,10 @@ export class ReadByIdPage implements OnInit {
             return;
           }
           this.videoAula = videoAula;
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          console.log(user);
+          console.log(videoAula);
+          this.isCreator = user.id === videoAula?.usuario?.id;
         },
         (error) => {
           this.presentToast('Erro ao carregar vídeo: ' + error.message);
@@ -56,7 +61,12 @@ export class ReadByIdPage implements OnInit {
   }
 
   onBack() {
-    this.router.navigate(['/tabs/tab2']);
+    if (this.isCreator) {
+      this.router.navigate(['/tabs/tab3']);
+      return;
+    } else {
+      this.router.navigate(['/tabs/tab2']);
+    }
   }
 
   async exportarParaPDF() {
@@ -64,11 +74,13 @@ export class ReadByIdPage implements OnInit {
       this.presentToast('Vídeo não carregado.', 'danger');
       return;
     }
-    if(this.videoAula.transcricoes?.status.descricao === 'Cancelado' || this.videoAula.transcricoes?.status.descricao === 'Pendente' 
-      || this.videoAula.transcricoes?.status.descricao === 'Em Andamento') {
+    if (
+      this.videoAula.transcricoes?.status.descricao === 'Cancelado' ||
+      this.videoAula.transcricoes?.status.descricao === 'Pendente' ||
+      this.videoAula.transcricoes?.status.descricao === 'Em Andamento'
+    ) {
       this.presentToast('Transcrição não disponível.', 'warning');
       return;
-
     }
 
     const loading = await this.loadingCtrl.create({
@@ -76,7 +88,7 @@ export class ReadByIdPage implements OnInit {
       spinner: 'crescent',
       backdropDismiss: false,
     });
-     await loading.present();
+    await loading.present();
 
     this.videoAulaService.exportarParaPDF(this.videoAula).subscribe({
       next: (blob) => {
@@ -95,5 +107,36 @@ export class ReadByIdPage implements OnInit {
         this.presentToast('Erro ao baixar PDF: ' + err.message, 'danger');
       },
     });
+  }
+
+  async deleteVideoAula() {
+    if (!this.videoAula) {
+      this.presentToast('Vídeo não carregado.', 'danger');
+      return;
+    }
+
+    const loading = await this.loadingCtrl.create({
+      message: 'Apagando vídeo...',
+      spinner: 'crescent',
+      backdropDismiss: false,
+    });
+    await loading.present();
+
+    this.videoAulaService.deleteVideoAula(this.videoAula.id!).subscribe({
+      next: () => {
+        loading.dismiss();
+        this.presentToast('Vídeo apagado com sucesso!', 'success');
+        this.router.navigate(['/tabs/tab3']);
+      },
+      error: (err) => {
+        console.error('Erro ao apagar vídeo:', err);
+        loading.dismiss();
+        this.presentToast('Erro ao apagar vídeo: ' + err.message, 'danger');
+      },
+    });
+  }
+
+  async onEdit() {
+
   }
 }

@@ -2,6 +2,7 @@ import { Component, OnChanges } from '@angular/core';
 import { Curso, Tema, Universidade, VideoAula } from '../types/VideoAula';
 import { VideoAulaService } from '../services/video_aula.service';
 import { ToastController } from '@ionic/angular';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-tab3',
@@ -21,10 +22,12 @@ export class Tab3Page {
 
   videoAulas: VideoAula[] = [];
   videoAulasFiltradas: VideoAula[] = [];
+  isHovered: number | undefined = undefined;
 
   constructor(
     private videoAulaService: VideoAulaService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private router: Router
   ) {
     this.carregarVideoAulas();
   }
@@ -149,5 +152,8 @@ export class Tab3Page {
       color,
     });
     await toast.present();
+  }
+  abrirVideoAula(id?: number) {
+    this.router.navigate(['/tabs/tab2', id]);
   }
 }

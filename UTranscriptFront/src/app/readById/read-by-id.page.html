@@ -4,13 +4,15 @@
   </ion-toolbar>
 </ion-header>
 <ion-buttons slot="start">
-  <ion-back-button defaultHref="/tabs/tab2" (click)="onBack()"></ion-back-button>
+  <ion-back-button
+    defaultHref="/tabs/tab2"
+    (click)="onBack()"
+  ></ion-back-button>
 </ion-buttons>
 <ion-content [fullscreen]="true">
   <ion-card *ngIf="videoAula">
     <ion-card-header>
       <ion-card-title>{{videoAula.titulo}}</ion-card-title>
-        
     </ion-card-header>
     <ion-card-content>
       <p><strong>Universidade:</strong> {{videoAula.universidade?.nome}}</p>
@@ -38,11 +40,18 @@
   </ion-card>
   <ion-card>
     <ion-card-content>
-      <ion-button (click)="exportarParaPDF()"> 
+      <ion-button (click)="exportarParaPDF()">
         Exportar Conteúdo para PDF
         <ion-icon slot="end" name="download-outline"></ion-icon>
       </ion-button>
+       <ion-button (click)="deleteVideoAula()" color="danger" *ngIf="isCreator">
+        Apagar Vídeo
+        <ion-icon slot="end" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+      <ion-button color="warning" (click)="onEdit()" *ngIf="isCreator">
+        Editar Vídeo
+        <ion-icon slot="end" name="create-outline"></ion-icon>
+      </ion-button>
     </ion-card-content>
   </ion-card>
-
 </ion-content>

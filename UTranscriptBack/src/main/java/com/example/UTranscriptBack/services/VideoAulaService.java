@@ -20,16 +20,19 @@ public class VideoAulaService {
     private final CursoService cursoRepo;
     private final UniversidadeService universidadeRepo;
     private final TemaService temaRepo;
+    private final TranscriptionService transcriptionRepo;
 
 
     public VideoAulaService(VideoAulaRepository repo,
                             CursoService cursoRepo,
                             UniversidadeService universidadeRepo,
-                            TemaService temaRepo) {
+                            TemaService temaRepo,
+                            TranscriptionService transcriptionRepo) {
         this.repo = repo;
         this.cursoRepo = cursoRepo;
         this.universidadeRepo = universidadeRepo;
-        this.temaRepo = temaRepo;
+        this.temaRepo = temaRepo;   
+        this.transcriptionRepo = transcriptionRepo;
     }
 
     public VideoAulaModel create(VideoAulaDTO dto, UserModel user) {
@@ -67,6 +70,11 @@ public class VideoAulaService {
 
     public List<VideoAulaModel> findAll() {
         return repo.findAll();
+    }
+
+    public void delete(VideoAulaModel videoAula) {
+        transcriptionRepo.deleteByVideoAula(videoAula.getId());
+        repo.delete(videoAula);
     }
 
 }

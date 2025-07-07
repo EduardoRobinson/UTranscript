@@ -4,17 +4,20 @@ import org.springframework.http.HttpHeaders;
 
 import org.springframework.http.MediaType;
 
+import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -123,7 +126,7 @@ public class UTranscriptController {
 
     @PostMapping("/video-aula")
     public ResponseEntity<VideoAulaModel> criar(@RequestPart("dados") VideoAulaDTO dto,
-            @RequestPart("file") MultipartFile file, Authentication authentication) {
+            @RequestPart("file") MultipartFile file, Authentication authentication) throws java.io.IOException {
         String token = request.getHeader("Authorization");
 
         String jwt = token.substring(7);
@@ -134,6 +137,7 @@ public class UTranscriptController {
         }
         UserModel user = userOptional.get();
         VideoAulaModel v = service.create(dto, user);
+
         TranscriptionModel transcription = new TranscriptionModel();
         transcription.setVideoAula(v);
         transcription.setConteudo("");
@@ -144,17 +148,31 @@ public class UTranscriptController {
         StatusTranscriptionModel status = statusOptional.get();
         transcription.setStatus(status);
         transcription = transcriptionService.create(transcription);
-        final TranscriptionModel transcriptionFinal = transcription;
+
+        // 👇 Salva o arquivo temporário AQUI, enquanto o MultipartFile ainda é válido
+        File tempFile;
+        try {
+            tempFile = File.createTempFile("upload-", ".tmp");
+            file.transferTo(tempFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        final Long transcriptionId = transcription.getId();
+        final File finalTempFile = tempFile;
 
         executorService.submit(() -> {
             try {
-                enviarArquivoParaFastAPI(transcriptionFinal.getId(), file);
+                enviarArquivoParaFastAPI(transcriptionId, finalTempFile);
             } catch (Exception e) {
                 e.printStackTrace();
+            } finally {
+                finalTempFile.delete(); // limpa o lixo
             }
         });
-        return ResponseEntity.ok(v);
 
+        return ResponseEntity.ok(v);
     }
 
     @GetMapping("/cursos")
@@ -217,20 +235,36 @@ public class UTranscriptController {
         return new ResponseEntity<>(response.getBody(), responseHeaders, HttpStatus.OK);
     }
 
-    private void enviarArquivoParaFastAPI(Long videoAulaId, MultipartFile file) throws IOException {
+    @DeleteMapping("/video-aula/{id}")
+    public ResponseEntity<Void> deletarVideoAula(@PathVariable Long id, Authentication authentication) {
+        VideoAulaModel videoAula = service.findById(id);
+        if (videoAula == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        service.delete(videoAula);
+        return ResponseEntity.noContent().build();
+    }
+
+    private void enviarArquivoParaFastAPI(Long videoAulaId, File file) throws IOException {
         System.out.println("Enviando arquivo para FastAPI...");
         WebClient webClient = WebClient.builder().baseUrl("http://127.0.0.1:8000").build();
 
-        MultipartBodyBuilder builder = new MultipartBodyBuilder();
-        builder.part("file", file.getResource());
+        // Convert MultipartFile to a temporary File
+        try {
+            MultipartBodyBuilder builder = new MultipartBodyBuilder();
+            builder.part("file", new FileSystemResource(file));
 
-        webClient.post()
-                .uri("/transcricao/" + videoAulaId)
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .body(BodyInserters.fromMultipartData(builder.build()))
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
+            webClient.post()
+                    .uri("/transcricao/" + videoAulaId)
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .body(BodyInserters.fromMultipartData(builder.build()))
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+        } catch (Exception e) {
+            System.err.println("Erro ao enviar arquivo para FastAPI: " + e.getMessage());
+            throw new IOException("Erro ao enviar arquivo para FastAPI", e);
+        }
     }
 
 }

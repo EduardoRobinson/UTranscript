@@ -47,4 +47,8 @@ export class VideoAulaService {
         return this.http.post(`${this.apiUrl}/video-aula/pdf`, videoAula, { responseType: 'blob' });
     }
 
+    deleteVideoAula(id: number): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/video-aula/${id}`);
+    }
+
   }
