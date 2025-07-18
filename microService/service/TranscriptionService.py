@@ -1,98 +1,53 @@
-import threading
-from dotenv import load_dotenv
-from models.transcriptionType import TranscriptionResponse
-import whisperx
 import tempfile
 import os
 from faster_whisper import WhisperModel
-import pdfkit
-from jinja2 import Environment, FileSystemLoader
-from llama_cpp import Llama
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from models.llmLoaded import llmLoaded
+from models.transcriptionType import TranscriptionResponse
+import torch
+import gc
 
+class Transcricao:
+    def __init__(self,llm: llmLoaded):
+        self.llm_pipeline = llm.llm_pipeline
+        self.transcribe_model = llm.transcribe_model   
 
-load_dotenv()
+    async def transcrever(self, arquivo):
+        """Transcreve um áudio e retorna texto bruto."""
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_file:
+            temp_file.write(await arquivo.read())
+            temp_path = temp_file.name
 
-class Transcricao():
-    def __init__(self):
-        self.model = WhisperModel("large-v2")     
-        self.llm = ""  # Modelo local
-        self.tokenizer = None
-        self.model_instance = None
+        print(f"📁 Áudio salvo em: {temp_path}")
 
-        self.load_local_model()
+        try:
+            segments, _ = self.transcribe_model.transcribe(temp_path)
+            texto = " ".join([seg.text for seg in segments])
+        except Exception as e:
+            print(f"❌ Erro ao transcrever áudio: {e}")
+            raise e 
+        finally:
+            os.remove(temp_path)
 
-    def load_local_model(self):
-        """Carrega o modelo Llama 3.2-1B localmente."""
+        print("✅ Transcrição concluída.")
+        return await self.gerar_resumo(texto)
+
+    async def gerar_resumo(self, texto):
+        """Gera resumo com modelo local."""
+        print("🧠 Gerando resumo...")
+
+        prompt = (
+        f"Resuma a transcrição abaixo feita da video aula como se fosse um relatório ,sem caracteres especiais , e com os temas abordados e trazendo da literatura da area referências quando possível:\n"
+        f"{texto}\nResumo:"
+         )
+
         
-        print("Carregando modelo local...")
-        self.llm = Llama.from_pretrained(
-         repo_id="Inza124/Llama3.2_3b",
-         filename="Llama3.2-maIN.gguf",
-         n_gpu_layers=-1, # Uncomment to use GPU acceleration
-         seed=1337, # Uncomment to set a specific seed
-         n_ctx=2048, # Uncomment to increase the context window
-        )
-        
-        
-
-    def generate_text(self, prompt):
-        """Gera texto usando o modelo Llama local."""
-        output=self.llm.create_chat_completion(messages=[
-          {
-                "role": "system",
-                "content": "You are an assistant who perfectly describes text."
-          },
-          {
-              "role": "user",
-              "content": f"Gostaria de um relatório sobre a seguinte transcrição feita sobre uma reunião:{prompt}"
-          }
-        ]
-        )
-        return output
-
-    async def transcrever2(self, arquivo):
-            """Transcreve um áudio usando WhisperX."""
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_file:
-                temp_file.write(await arquivo.read())  
-                temp_path = temp_file.name
-            
-            print(f"Arquivo temporário criado em: {temp_path}")
-
-            if not os.path.exists(temp_path):
-                raise FileNotFoundError(f"Arquivo temporário não encontrado: {temp_path}")
-            
-            try:
-                audio = whisperx.load_audio(temp_path)
-            except FileNotFoundError as e:
-                raise FileNotFoundError("Certifique-se de que o FFmpeg está instalado e no PATH do sistema.") from e
-
-            result = self.model.transcribe(audio)
-            updated_first_element = [item.__dict__ for item in result[0]]
-            result = (updated_first_element, *result[1:])
-            model_a, metadata = whisperx.load_align_model(language_code=result[1].language, device="cuda")
-            result = whisperx.align(list(result[0]), model_a, metadata, audio, "cuda", return_char_alignments=False)
-            
-            text = []
-            for item in result["segments"]:
-                text.append(item["text"])
-            result = " ".join(text)
-            print(result)
-
-            return await self.resume(result)
-
-    async def resume(self, result):
-        """Gera um resumo do texto transcrito."""
-        response = self.generate_text(result)
-        print(response["choices"])
-        transcription = TranscriptionResponse(transcricao=result, resumo=response["choices"][0]["message"]["content"])
+        output = self.llm_pipeline(prompt, do_sample=True, temperature=0.7,max_new_tokens=2048,truncation=True )
+        resposta_completa = output[0]["generated_text"]
+        if resposta_completa.startswith(prompt):
+            resumo = resposta_completa[len(prompt):].strip()
+        else:
+            resumo = resposta_completa.strip()
+        transcription=TranscriptionResponse(resumo=resumo,transcricao=texto)
+        print("✅ Resumo gerado.")
         return transcription
-
-
-        
-
-        
-        
-        
-
-
-

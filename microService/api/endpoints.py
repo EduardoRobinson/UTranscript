@@ -1,15 +1,22 @@
 
+import asyncio
+import shutil
+import tempfile
+from threading import Thread
 from dto.videoAulaDTO import VideoAulaDTO
+from models.llmLoaded import llmLoaded
 from service.YoutubeService import YoutubeService
 from service.TranscriptionService import Transcricao
 from fastapi import APIRouter, Path,Request,File, UploadFile
 from fastapi.responses import FileResponse
 import os
-from fastapi import Body
+from fastapi import Body,Request
+from service.threadService import ThreadService
 
 from service.pdfService import pdfService
 
 router = APIRouter()
+
 
 @router.get("/health")
 async def health_check():
@@ -18,12 +25,21 @@ async def health_check():
 
 @router.post("/transcricao/{id}")
 async def create_transcricao(
-    id: int = Path(...),  # <- id vem da URL
-    file: UploadFile = File(...)  # <- file vem do corpo (multipart)
+    request: Request,
+    id: int = Path(...), 
+    file: UploadFile = File(...) ,
 ):
     print(f"ID recebido: {id}")
+    auth_header = request.headers.get("authorization") 
     print(f"Nome do arquivo recebido: {file.filename}")
-    # Aqui você processa o arquivo
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp:
+        shutil.copyfileobj(file.file, temp)
+        temp_path = temp.name
+    llm = request.app.state.llm
+    service = ThreadService()
+    thread = Thread(target=service.transcrever_em_thread, args=(id, temp_path,llm,auth_header))
+    thread.start()
+    
     return {"msg": "Recebido com sucesso", "id": id, "filename": file.filename}
 
 

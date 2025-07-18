@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import com.example.UTranscriptBack.models.TranscriptionModel;
 import com.example.UTranscriptBack.repositories.TranscriptionRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class TranscriptionService {
 
@@ -25,8 +27,17 @@ public class TranscriptionService {
     public void deleteByVideoAula(Long videoAulaId) {
         TranscriptionModel transcription = this.repo.findByVideoAulaId(videoAulaId).orElse(null);
         if (transcription != null) {
-           this.repo.delete(transcription);
-        }   
+            this.repo.delete(transcription);
+        }
         return;
+    }
+
+    @Transactional
+    public TranscriptionModel update(TranscriptionModel transcription) {
+        return this.repo.save(transcription);
+    }
+
+    public TranscriptionModel findById(Long id) {
+        return this.repo.findById(id).orElse(null);
     }
 }
