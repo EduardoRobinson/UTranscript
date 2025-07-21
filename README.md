@@ -8,5 +8,5 @@ Novo projeto para conclusão de curso
 -BackEnd: SpringBoot  
 -Microserviços: FastAPI  
 -Banco: PostGreSQL  
--LLM para geração de resumo: A definir  
--Transcrição: WhisperX
+-LLM para geração de resumo: Phi-4-Mini    
+-Transcrição: FasterWhisper
