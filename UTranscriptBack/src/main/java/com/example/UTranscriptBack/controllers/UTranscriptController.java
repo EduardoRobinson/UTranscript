@@ -255,15 +255,16 @@ public class UTranscriptController {
             @RequestBody Map<String, String> payload) throws java.io.IOException {
 
         String conteudo = payload.get("resumo"); // pega o campo "resumo" do JSON
-        if ("Erro ao processar transcrição".equals(conteudo)) {
+        if (conteudo == null || conteudo.isEmpty()) {
             TranscriptionModel transcription = transcriptionService.findById(Long.parseLong(id));
-            transcription.setConteudo(conteudo);
+            transcription.setConteudo("Erro ao processar a transcrição: conteúdo vazio");
             transcription.setStatus(statusTranscriptionRepository.findByDescricao("Cancelado").orElse(null));
             transcription = transcriptionService.update(transcription);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(transcription);
         }
         TranscriptionModel transcription = transcriptionService.findById(Long.parseLong(id));
         transcription.setStatus(statusTranscriptionRepository.findByDescricao("Concluído").orElse(null));
+        transcription.setConteudo(conteudo);
         transcription = transcriptionService.update(transcription);
 
         if (transcription == null) {

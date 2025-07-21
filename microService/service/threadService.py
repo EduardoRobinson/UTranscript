@@ -65,8 +65,8 @@ class ThreadService:
                 "Authorization": f"Bearer {token}"
             }
             payload = {
-            "resumo": "Erro ao processar transcrição",
-            "transcricao": "Erro ao processar transcrição"
+            "resumo": '',
+            "transcricao": ''
             }
             response = requests.put(
                 spring_url,
