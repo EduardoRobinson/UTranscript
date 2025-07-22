@@ -3,6 +3,7 @@ import { LoadingController, ToastController } from '@ionic/angular';
 import { VideoAulaService } from '../services/video_aula.service';
 import { Router } from '@angular/router';
 import { VideoAula } from '../types/VideoAula';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-read-by-id',
@@ -17,7 +18,8 @@ export class ReadByIdPage implements OnInit {
     private videoAulaService: VideoAulaService,
     private toastController: ToastController,
     private router: Router,
-    private loadingCtrl: LoadingController
+    private loadingCtrl: LoadingController,
+    private location: Location
   ) {}
 
   ngOnInit() {
@@ -61,12 +63,7 @@ export class ReadByIdPage implements OnInit {
   }
 
   onBack() {
-    if (this.isCreator) {
-      this.router.navigate(['/tabs/tab3']);
-      return;
-    } else {
-      this.router.navigate(['/tabs/tab2']);
-    }
+     this.location.back();
   }
 
   async exportarParaPDF() {
