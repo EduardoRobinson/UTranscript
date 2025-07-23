@@ -5,7 +5,6 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
 
-
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
@@ -50,12 +49,13 @@ export class Tab1Page implements OnInit {
       .subscribe((res) => (this.universidades = res));
   }
 
-  buscarTemasPorCurso() {
-    const id = this.formVideoAula.value.cursoId;
-    if (id) {
-      this.videoAulaService.buscarTemaPorCurso(id).subscribe((res) => {
-        this.temasSugeridos = res;
-      });
+  buscarTemasPorCurso(cursoSelecionado: Curso) {
+    if (cursoSelecionado?.id) {
+      this.videoAulaService
+        .buscarTemaPorCurso(cursoSelecionado.id)
+        .subscribe((res) => {
+          this.temasSugeridos = res;
+        });
     }
   }
   arquivoSelecionado: File | null = null;
@@ -81,14 +81,20 @@ export class Tab1Page implements OnInit {
   }
 
   salvarVideoaula() {
+    console.log('Dados do formulário:', this.formVideoAula.value);
     if (this.formVideoAula.invalid) {
       this.formVideoAula.markAllAsTouched();
-      this.presentToast('Por favor, preencha todos os campos obrigatórios.', 'danger');
+      this.presentToast(
+        'Por favor, preencha todos os campos obrigatórios.',
+        'danger'
+      );
       return;
     }
 
     this.formVideoAula.value.data = new Date().toISOString().split('T')[0];
-
+    this.formVideoAula.value.cursoId = this.formVideoAula.value.cursoId.id;
+    this.formVideoAula.value.universidadeId = this.formVideoAula.value.universidadeId.id;
+    this.formVideoAula.value.temaId = this.formVideoAula.value.temaId.id;
     if (!this.arquivoSelecionado) {
       alert('Nenhum arquivo selecionado.');
       return;
@@ -102,18 +108,23 @@ export class Tab1Page implements OnInit {
       'dados',
       new Blob([JSON.stringify(payload)], { type: 'application/json' })
     );
-
+    console.log('FormData criado:', formData.get('dados'));
+    
     this.videoAulaService.createVideoAula(formData).subscribe((res) => {
       if (res) {
         console.log('Videoaula criada com sucesso:', res);
         this.presentToast('Videoaula criada com sucesso!', 'success');
         this.formVideoAula.reset();
-        this.arquivoSelecionado = null; 
-        this.router.navigate(['/tabs/tab3']);// Redireciona para a aba de videoaulas cadastradas
+        this.arquivoSelecionado = null;
+        this.router.navigate(['/tabs/tab3']); // Redireciona para a aba de videoaulas cadastradas
       } else {
         console.error('Erro ao criar videoaula:', res);
-        this.presentToast('Erro ao criar videoaula. Tente novamente.', 'danger');
+        this.presentToast(
+          'Erro ao criar videoaula. Tente novamente.',
+          'danger'
+        );
       }
     });
+    
   }
 }
