@@ -51,4 +51,8 @@ export class VideoAulaService {
         return this.http.delete<void>(`${this.apiUrl}/video-aula/${id}`);
     }
 
+    updateVideoAula(id: number, data: VideoAula): Observable<VideoAula> {
+        return this.http.put<VideoAula>(`${this.apiUrl}/video-aula/${id}`, data);
+    }
+
   }

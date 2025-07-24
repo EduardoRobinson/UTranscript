@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>{{videoAula?.titulo}}</ion-title>
+    <ion-title> {{ Editable ? videoAulaOriginal?.titulo : videoAula?.titulo }}</ion-title>
   </ion-toolbar>
 </ion-header>
 <ion-buttons slot="start">
@@ -12,17 +12,85 @@
 <ion-content [fullscreen]="true">
   <ion-card *ngIf="videoAula">
     <ion-card-header>
-      <ion-card-title>{{videoAula.titulo}}</ion-card-title>
+      <ion-card-title>
+        {{ Editable ? videoAulaOriginal?.titulo : videoAula.titulo }}
+      </ion-card-title>
     </ion-card-header>
     <ion-card-content>
-      <p><strong>Universidade:</strong> {{videoAula.universidade?.nome}}</p>
-      <p><strong>Curso:</strong> {{videoAula.curso?.nome}}</p>
-      <p><strong>Professor:</strong> {{videoAula.professor}}</p>
-      <p><strong>Tema:</strong> {{videoAula.tema?.descricao}}</p>
+      <ng-container *ngIf="Editable; else readOnlyTitulo">
+        <ion-item>
+          <ion-label position="floating">Titulo</ion-label>
+          <ion-input [(ngModel)]="videoAula.titulo"></ion-input>
+        </ion-item>
+      </ng-container>
+      <ng-template #readOnlyTitulo>
+        <p><strong>Titulo:</strong> {{videoAula.titulo}}</p>
+      </ng-template>
+      <ng-container *ngIf="Editable; else readOnlyUniversidade">
+        <ion-item>
+          <ion-label position="floating">Universidade</ion-label>
+          <ionic-selectable
+            itemValueField="id"
+            itemTextField="nome"
+            [items]="universidades"
+            [(ngModel)]="videoAula.universidade"
+            placeholder="Selecione uma universidade"
+          >
+          </ionic-selectable>
+        </ion-item>
+      </ng-container>
+      <ng-template #readOnlyUniversidade>
+        <p><strong>Universidade:</strong> {{videoAula.universidade?.nome}}</p>
+      </ng-template>
+      <ng-container *ngIf="Editable; else readOnlyCurso">
+        <ion-item>
+          <ion-label position="floating">Curso</ion-label>
+          <ionic-selectable
+            itemValueField="id"
+            itemTextField="nome"
+            [items]="cursos"
+            [(ngModel)]="videoAula.curso"
+            (onChange)="buscarTemasPorCurso($event.value)"
+            placeholder="Selecione um curso"
+          >
+          </ionic-selectable>
+        </ion-item>
+      </ng-container>
+      <ng-template #readOnlyCurso>
+        <p><strong>Curso:</strong> {{videoAula.curso?.nome}}</p>
+      </ng-template>
+      <ng-container *ngIf="Editable; else readOnlyTema">
+        <ion-item>
+          <ion-label position="floating">Tema</ion-label>
+          <ionic-selectable
+            itemValueField="id"
+            itemTextField="descricao"
+            [items]="temasSugeridos"
+            [(ngModel)]="videoAula.tema"
+            placeholder="Selecione um tema"
+          >
+          </ionic-selectable>
+        </ion-item>
+      </ng-container>
+      <ng-template #readOnlyTema>
+        <p><strong>Tema:</strong> {{videoAula.tema?.descricao}}</p>
+      </ng-template>
+      <ng-container *ngIf="Editable; else readOnlyProfessor">
+        <ion-item>
+          <ion-label position="floating">Professor</ion-label>
+          <ion-input [(ngModel)]="videoAula.professor"></ion-input>
+        </ion-item>
+      </ng-container>
+      <ng-template #readOnlyProfessor>
+        <p><strong>Professor:</strong> {{videoAula.professor}}</p>
+      </ng-template>
       <p>
         <strong>Data de Criação:</strong> {{videoAula.data| date:'dd/MM/yyyy'}}
       </p>
     </ion-card-content>
+    <ion-button (click)="salvarEdicao()" *ngIf="Editable" id="salvar-edicao"
+      >Salvar Edição</ion-button
+    >
   </ion-card>
   <ion-card *ngIf="videoAula?.transcricoes">
     <ion-card-header>
@@ -44,11 +112,11 @@
         Exportar Conteúdo para PDF
         <ion-icon slot="end" name="download-outline"></ion-icon>
       </ion-button>
-       <ion-button (click)="deleteVideoAula()" color="danger" *ngIf="isCreator">
+      <ion-button (click)="deleteVideoAula()" color="danger" *ngIf="isCreator">
         Apagar Vídeo
         <ion-icon slot="end" name="arrow-back-outline"></ion-icon>
       </ion-button>
-      <ion-button color="warning" (click)="onEdit()" *ngIf="isCreator">
+      <ion-button color="warning" (click)="editarVideo()" *ngIf="isCreator">
         Editar Vídeo
         <ion-icon slot="end" name="create-outline"></ion-icon>
       </ion-button>

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { LoadingController, ToastController } from '@ionic/angular';
 import { VideoAulaService } from '../services/video_aula.service';
 import { Router } from '@angular/router';
-import { VideoAula } from '../types/VideoAula';
+import { Curso, Tema, Universidade, VideoAula } from '../types/VideoAula';
 import { Location } from '@angular/common';
 
 @Component({
@@ -14,6 +14,11 @@ import { Location } from '@angular/common';
 export class ReadByIdPage implements OnInit {
   videoAula: VideoAula | undefined;
   isCreator: boolean = false;
+  Editable: boolean = false;
+  cursos: Curso[] = [];
+  universidades: Universidade[] = [];
+  temasSugeridos: Tema[] = [];
+  videoAulaOriginal: any = null;
   constructor(
     private videoAulaService: VideoAulaService,
     private toastController: ToastController,
@@ -36,9 +41,9 @@ export class ReadByIdPage implements OnInit {
           }
           this.videoAula = videoAula;
           const user = JSON.parse(localStorage.getItem('user') || '{}');
-          console.log(user);
-          console.log(videoAula);
+
           this.isCreator = user.id === videoAula?.usuario?.id;
+          this.carregarDadosIniciais();
         },
         (error) => {
           this.presentToast('Erro ao carregar vídeo: ' + error.message);
@@ -46,6 +51,28 @@ export class ReadByIdPage implements OnInit {
       );
     } else {
       this.presentToast('ID do vídeo não encontrado.');
+    }
+  }
+
+  carregarDadosIniciais() {
+    this.videoAulaService
+      .getAllCursos()
+      .subscribe((res) => (this.cursos = res));
+    this.videoAulaService
+      .getAllUniversidades()
+      .subscribe((res) => (this.universidades = res));
+    if (this.videoAula && this.videoAula.curso) {
+      this.buscarTemasPorCurso(this.videoAula.curso);
+    }
+  }
+
+  buscarTemasPorCurso(cursoSelecionado: Curso) {
+    if (cursoSelecionado?.id) {
+      this.videoAulaService
+        .buscarTemaPorCurso(cursoSelecionado.id)
+        .subscribe((res) => {
+          this.temasSugeridos = res;
+        });
     }
   }
 
@@ -63,7 +90,12 @@ export class ReadByIdPage implements OnInit {
   }
 
   onBack() {
-     this.location.back();
+    this.location.back();
+  }
+
+  editarVideo() {
+    this.videoAulaOriginal = JSON.parse(JSON.stringify(this.videoAula)); // clona
+    this.Editable = true;
   }
 
   async exportarParaPDF() {
@@ -133,7 +165,32 @@ export class ReadByIdPage implements OnInit {
     });
   }
 
-  async onEdit() {
+  async salvarEdicao() {
+    this.Editable = false;
+    const loading = await this.loadingCtrl.create({
+      message: 'Apagando vídeo...',
+      spinner: 'crescent',
+      backdropDismiss: false,
+    });
+    // await loading.present();
 
+    console.log('Dados do vídeo:', this.videoAula);
+
+    this.videoAulaService
+      .updateVideoAula(this.videoAula!.id!, this.videoAula!)
+      .subscribe({
+        next: (videoAula) => {
+          loading.dismiss();
+          loading.dismiss();
+          this.videoAula = videoAula;
+          this.videoAulaOriginal = JSON.parse(JSON.stringify(videoAula));
+          this.presentToast('Edição salva com sucesso!', 'success');
+        },
+        error: (err) => {
+          loading.dismiss();
+          console.error('Erro ao salvar edição:', err);
+          this.presentToast('Erro ao salvar edição: ' + err.message, 'danger');
+        },
+      });
   }
 }

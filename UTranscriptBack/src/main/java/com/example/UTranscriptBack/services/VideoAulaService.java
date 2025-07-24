@@ -77,4 +77,18 @@ public class VideoAulaService {
         repo.delete(videoAula);
     }
 
+    public VideoAulaModel update(String id, VideoAulaModel videoAula) {
+        VideoAulaModel existingVideoAula = repo.findById(Long.parseLong(id))
+                .orElseThrow(() -> new RuntimeException("Video Aula not found"));
+
+        existingVideoAula.setTitulo(videoAula.getTitulo());
+        existingVideoAula.setData(videoAula.getData());
+        existingVideoAula.setProfessor(videoAula.getProfessor());
+        existingVideoAula.setCurso(videoAula.getCurso());
+        existingVideoAula.setUniversidade(videoAula.getUniversidade());
+        existingVideoAula.setTema(videoAula.getTema());
+
+        return repo.save(existingVideoAula);
+    }
+
 }

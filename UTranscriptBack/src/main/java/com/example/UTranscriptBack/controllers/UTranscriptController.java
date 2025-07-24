@@ -249,6 +249,16 @@ public class UTranscriptController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("video-aula/{id}")
+    public ResponseEntity<VideoAulaModel> atualizarVideoAula(@PathVariable String id, @RequestBody VideoAulaModel videoAula) {
+        VideoAulaModel videoAulaAtualizado = service.update(id, videoAula);
+        if (videoAulaAtualizado == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(videoAulaAtualizado);
+    }
+
+
     @PutMapping("/transcription/{id}")
     public ResponseEntity<TranscriptionModel> atualizarTranscricao(
             @PathVariable String id,
@@ -273,6 +283,7 @@ public class UTranscriptController {
         return ResponseEntity.ok(transcription);
     }
 
+    
     private void enviarArquivoParaFastAPI(Long transcriptionId, File file, String token) throws IOException {
 
         System.out.println("Enviando arquivo para FastAPI...");
