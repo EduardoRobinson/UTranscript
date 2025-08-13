@@ -1,8 +1,32 @@
-.form-container {
-  height: 100%;
-  display: flex;
-  justify-content: center;  // centraliza horizontalmente
-  align-items: center;      // centraliza verticalmente
-  flex-direction: column;
-  padding: 0 16px;
+ion-content {
+  --background: var(--ion-color-light);
 }
+
+.login-card {
+  border-radius: 20px;
+  overflow: hidden; /* evita cortes estranhos do header */
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+}
+
+/* ÁREA DE HEADER GRANDE */
+.login-hero {
+  height: 260px;            /* controla a “altura de capa” */
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* LOGO PREENCHENDO O HEADER */
+.login-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;      /* mantém proporção sem cortar */
+  max-width: 520px;         /* limite opcional para não exagerar em telas largas */
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,.03)); /* sutil */
+}
+
+/* labels */
+.poppins { font-family: 'Poppins', sans-serif; }
+
+/* maior em telas grandes */

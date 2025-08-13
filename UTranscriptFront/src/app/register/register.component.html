@@ -5,26 +5,43 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <div class="form-container">
-  <form [formGroup]="cadastroForm" (ngSubmit)="onSubmit()">
-    <ion-item>
-      <ion-label position="floating" style="font-family: 'Poppins', sans-serif;">Nome</ion-label>
-      <ion-input formControlName="nome"></ion-input>
-    </ion-item>
+  <ion-grid fixed>
+    <ion-row class="ion-justify-content-center">
+      <ion-col size="12" size-md="8" size-lg="5">
+        <ion-card class="register-card">
+          <!-- Header com logo, igual à página de login -->
+          <ion-card-header class="register-hero">
+            <ion-img class="register-logo" src="assets/icon/logo.png" alt="Logo"></ion-img>
+          </ion-card-header>
 
-    <ion-item>
-      <ion-label position="floating" style="font-family: 'Poppins', sans-serif;">E-mail</ion-label>
-      <ion-input type="email" formControlName="email"></ion-input>
-    </ion-item>
+          <ion-card-content>
+            <form [formGroup]="cadastroForm" (ngSubmit)="onSubmit()">
+              <ion-item>
+                <ion-label position="floating" class="poppins">Nome</ion-label>
+                <ion-input formControlName="nome"></ion-input>
+              </ion-item>
 
-    <ion-item>
-      <ion-label position="floating" style="font-family: 'Poppins', sans-serif;">Senha</ion-label>
-      <ion-input type="password" formControlName="senha"></ion-input>
-    </ion-item>
+              <ion-item>
+                <ion-label position="floating" class="poppins">E-mail</ion-label>
+                <ion-input type="email" formControlName="email"></ion-input>
+              </ion-item>
 
-    <ion-button expand="block" type="submit" class="ion-margin-top">
-      Cadastrar
-    </ion-button>
-  </form>
-  </div>
+              <ion-item>
+                <ion-label position="floating" class="poppins">Senha</ion-label>
+                <ion-input type="password" formControlName="senha"></ion-input>
+              </ion-item>
+
+              <ion-button expand="block" type="submit" class="ion-margin-top" [disabled]="cadastroForm.invalid">
+                Cadastrar
+              </ion-button>
+            </form>
+
+            <ion-button expand="block" fill="clear" type="button" routerLink="/login">
+              Já tem uma conta? Entrar
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>

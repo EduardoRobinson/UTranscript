@@ -5,22 +5,38 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <div class="form-container">
-    <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
-      <ion-item>
-        <ion-label position="floating" style="font-family: 'Poppins', sans-serif;">Email</ion-label>
-        <ion-input type="email" formControlName="email" required></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-label position="floating" style="font-family: 'Poppins', sans-serif;">Senha</ion-label>
-        <ion-input type="password" formControlName="senha" required></ion-input>
-      </ion-item>
-      <ion-button expand="block" type="submit" [disabled]="loginForm.invalid">
-        Entrar
-      </ion-button>
-    </form>
-    <ion-button expand="block" fill="clear" type="button" (click)="navigateToRegister()">
-        Não tem uma conta? Registre-se  
-      </ion-button>
-  </div>
+  <ion-grid fixed>
+    <ion-row class="ion-justify-content-center">
+      <ion-col size="12" size-md="8" size-lg="5">
+        <ion-card class="login-card">
+          <!-- HEADER GRANDE DO CARD -->
+          <ion-card-header class="login-hero">
+            <ion-img class="login-logo" src="assets/icon/logo.png" alt="Logo"></ion-img>
+          </ion-card-header>
+
+          <ion-card-content>
+            <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+              <ion-item>
+                <ion-label position="floating" class="poppins">Email</ion-label>
+                <ion-input type="email" formControlName="email" required></ion-input>
+              </ion-item>
+
+              <ion-item>
+                <ion-label position="floating" class="poppins">Senha</ion-label>
+                <ion-input type="password" formControlName="senha" required></ion-input>
+              </ion-item>
+
+              <ion-button expand="block" type="submit" [disabled]="loginForm.invalid">
+                Entrar
+              </ion-button>
+            </form>
+
+            <ion-button expand="block" fill="clear" type="button" (click)="navigateToRegister()">
+              Não tem uma conta? Registre-se
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>
