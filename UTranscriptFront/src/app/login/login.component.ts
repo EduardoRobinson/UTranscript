@@ -35,12 +35,9 @@ export class LoginComponent  implements OnInit {
         },
         error: (err) => {
           console.error('Erro ao logar', err);
-          if (typeof err === 'object' && err !== null && 'error' in err) {
-            const apiErr = err as { error: any };
-            this.presentToast(apiErr.error.message || 'Erro desconhecido', 'danger');
-          } else {
-            this.presentToast('Erro ao realizar login', 'danger');
-          }
+        if(err.status === 500){
+          this.presentToast('Usuario ou senha incorreto', 'danger');
+        }
         }
       });
     }

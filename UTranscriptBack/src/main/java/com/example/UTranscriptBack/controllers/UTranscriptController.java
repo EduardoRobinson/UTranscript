@@ -1,15 +1,17 @@
 package com.example.UTranscriptBack.controllers;
 
 import org.springframework.http.HttpHeaders;
-
 import org.springframework.http.MediaType;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+// 👇 IMPORT CORRIGIDO PARA O SPRING SECURITY
+import org.springframework.security.core.Authentication; 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.ContentDisposition;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,29 +50,20 @@ import com.example.UTranscriptBack.services.TemaService;
 import com.example.UTranscriptBack.services.TranscriptionService;
 import com.example.UTranscriptBack.services.UniversidadeService;
 import com.example.UTranscriptBack.services.VideoAulaService;
-import java.util.concurrent.ExecutorService;
 
-import io.jsonwebtoken.io.IOException;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 public class UTranscriptController {
 
-    private final String FASTAPI_URL = "http://127.0.0.1:8000/youtube_download";
-
+    private final String FASTAPI_URL = System.getenv("FASTAPI_URL");
     private final VideoAulaService service;
-
     private final ExecutorService executorService = java.util.concurrent.Executors.newSingleThreadExecutor();
 
     private TemaService temaService;
-
     private CursoService cursoService;
-
     private UniversidadeService universidadeService;
-
     private TranscriptionService transcriptionService;
-
     private StatusTranscriptionRepository statusTranscriptionRepository;
 
     @Autowired
@@ -99,18 +93,23 @@ public class UTranscriptController {
 
     @PostMapping("/youtube_download")
     public ResponseEntity<byte[]> baixarYoutube(@RequestBody YoutubeRequestDTO dto, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+        if (!UserModel.class.isInstance(user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
         RestTemplate restTemplate = new RestTemplate();
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<YoutubeRequestDTO> request = new HttpEntity<>(dto, headers);
-
+        HttpEntity<YoutubeRequestDTO> requestEntity = new HttpEntity<>(dto, headers);
+        System.out.println("Enviando requisição para FastAPI com URL: "+ FASTAPI_URL);
+        
         try {
             ResponseEntity<byte[]> response = restTemplate.exchange(
-                    FASTAPI_URL,
+                    FASTAPI_URL.concat("/youtube_download"),
                     HttpMethod.POST,
-                    request,
+                    requestEntity,
                     byte[].class);
 
             HttpHeaders responseHeaders = new HttpHeaders();
@@ -128,30 +127,28 @@ public class UTranscriptController {
 
     @PostMapping("/video-aula")
     public ResponseEntity<VideoAulaModel> criar(@RequestPart("dados") VideoAulaDTO dto,
-            @RequestPart("file") MultipartFile file, Authentication authentication) throws java.io.IOException {
-        String token = request.getHeader("Authorization");
-
-        String jwt = token.substring(7);
-        String email = jwtService.extrairEmail(jwt);
-        Optional<UserModel> userOptional = userRepository.findByEmail(email);
-        if (!userOptional.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            @RequestPart("file") MultipartFile file, Authentication authentication) {
+                
+        UserModel user = (UserModel) authentication.getPrincipal();
+        if (!UserModel.class.isInstance(user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        UserModel user = userOptional.get();
-        VideoAulaModel v = service.create(dto, user);
 
+        VideoAulaModel v = service.create(dto, user);
+        
         TranscriptionModel transcription = new TranscriptionModel();
         transcription.setVideoAula(v);
         transcription.setConteudo("");
+        
         Optional<StatusTranscriptionModel> statusOptional = statusTranscriptionRepository.findByDescricao("Pendente");
         if (!statusOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+        
         StatusTranscriptionModel status = statusOptional.get();
         transcription.setStatus(status);
         transcription = transcriptionService.create(transcription);
 
-        // 👇 Salva o arquivo temporário AQUI, enquanto o MultipartFile ainda é válido
         File tempFile;
         try {
             tempFile = File.createTempFile("upload-", ".tmp");
@@ -161,76 +158,111 @@ public class UTranscriptController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
+        // 👇 Pegamos o token de dentro dos Cookies
+        String tokenFromCookie = "";
+        if (request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("token".equals(cookie.getName())) {
+                    tokenFromCookie = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
         final Long transcriptionId = transcription.getId();
         final File finalTempFile = tempFile;
+        final String finalToken = tokenFromCookie; // Token extraído do cookie para enviar ao FastAPI
 
         executorService.submit(() -> {
             try {
-                String cleanToken = token.replace("Bearer ", "");
-                System.out.println("🔑 Token limpo enviado pro FastAPI: " + cleanToken);
-                enviarArquivoParaFastAPI(transcriptionId, finalTempFile, cleanToken);
+                // Envia como Bearer token para o FastAPI, se ele exigir
+                enviarArquivoParaFastAPI(transcriptionId, finalTempFile, "Bearer " + finalToken);
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
-                finalTempFile.delete(); // limpa o lixo
+                finalTempFile.delete(); 
             }
         });
 
         return ResponseEntity.ok(v);
     }
 
+    // 👇 Todas as rotas de GET agora retornam ResponseEntity<List<T>> para poder devolver 401
     @GetMapping("/cursos")
-    public List<CursoModel> cursos(Authentication authentication) {
-        return cursoService.findAll();
+    public ResponseEntity<List<CursoModel>> cursos(Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+        if (!UserModel.class.isInstance(user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(cursoService.findAll());
     }
 
     @GetMapping("/temas/{id}")
-    public List<TemaModel> getTemasPorCurso(@PathVariable Long id, Authentication authentication) {
-        return temaService.findByCursoId(id);
+    public ResponseEntity<List<TemaModel>> getTemasPorCurso(@PathVariable Long id, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+        if (!UserModel.class.isInstance(user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(temaService.findByCursoId(id));
     }
 
     @GetMapping("/universidades")
-    public List<UniversidadeModel> universidades(Authentication authentication) {
-        return universidadeService.findAll();
+    public ResponseEntity<List<UniversidadeModel>> universidades(Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+        if (!UserModel.class.isInstance(user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(universidadeService.findAll());
     }
 
     @GetMapping("/video-aulas")
-    public List<VideoAulaModel> videoAulas(Authentication authentication) {
-        return service.findAll();
+    public ResponseEntity<List<VideoAulaModel>> videoAulas(Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+        if (!UserModel.class.isInstance(user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(service.findAll());
     }
 
+    // 👇 Rota arrumada (variáveis duplicadas foram removidas)
     @GetMapping("/video-aulas/user")
-    public List<VideoAulaModel> videoAulasPorUsuario(Authentication authentication) {
-        String token = request.getHeader("Authorization");
-
-        String jwt = token.substring(7);
-        String email = jwtService.extrairEmail(jwt);
-        Optional<UserModel> userOptional = userRepository.findByEmail(email);
-        if (!userOptional.isPresent()) {
-            return List.of(); // Retorna uma lista vazia se o usuário não for encontrado
+    public ResponseEntity<List<VideoAulaModel>> videoAulasPorUsuario(Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+        if (!UserModel.class.isInstance(user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        UserModel user = userOptional.get();
-        return service.findAll().stream()
+        
+        List<VideoAulaModel> aulas = service.findAll().stream()
                 .filter(videoAula -> videoAula.getUsuario().getId().equals(user.getId()))
                 .toList();
-
+                
+        return ResponseEntity.ok(aulas);
     }
 
     @GetMapping("/video-aula/{id}")
-    public VideoAulaModel videoAulaPorId(@PathVariable Long id, Authentication authentication) {
-        return service.findById(id);
+    public ResponseEntity<VideoAulaModel> videoAulaPorId(@PathVariable Long id, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+        if (!UserModel.class.isInstance(user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(service.findById(id));
     }
 
     @PostMapping("/video-aula/pdf")
     public ResponseEntity<byte[]> exportarParaPDF(@RequestBody VideoAulaModel videoAula, Authentication auth) {
+        UserModel user = (UserModel) auth.getPrincipal();
+        if (!UserModel.class.isInstance(user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<VideoAulaModel> request = new HttpEntity<>(videoAula, headers);
+        HttpEntity<VideoAulaModel> requestEntity = new HttpEntity<>(videoAula, headers);
 
         ResponseEntity<byte[]> response = restTemplate
-                .postForEntity("http://127.0.0.1:8000/videoAula_pdf", request, byte[].class);
+                .postForEntity(FASTAPI_URL.concat("/videoAula_pdf"), requestEntity, byte[].class);
 
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_PDF);
@@ -241,6 +273,11 @@ public class UTranscriptController {
 
     @DeleteMapping("/video-aula/{id}")
     public ResponseEntity<Void> deletarVideoAula(@PathVariable Long id, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+        if (!UserModel.class.isInstance(user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
         VideoAulaModel videoAula = service.findById(id);
         if (videoAula == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -249,8 +286,14 @@ public class UTranscriptController {
         return ResponseEntity.noContent().build();
     }
 
+    // 👇 O parâmetro Authentication authentication estava faltando aqui
     @PutMapping("video-aula/{id}")
-    public ResponseEntity<VideoAulaModel> atualizarVideoAula(@PathVariable String id, @RequestBody VideoAulaModel videoAula) {
+    public ResponseEntity<VideoAulaModel> atualizarVideoAula(@PathVariable String id, @RequestBody VideoAulaModel videoAula, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+        if (!UserModel.class.isInstance(user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
         VideoAulaModel videoAulaAtualizado = service.update(id, videoAula);
         if (videoAulaAtualizado == null) {
             return ResponseEntity.notFound().build();
@@ -258,13 +301,12 @@ public class UTranscriptController {
         return ResponseEntity.ok(videoAulaAtualizado);
     }
 
-
     @PutMapping("/transcription/{id}")
     public ResponseEntity<TranscriptionModel> atualizarTranscricao(
             @PathVariable String id,
-            @RequestBody Map<String, String> payload) throws java.io.IOException {
+            @RequestBody Map<String, String> payload) {
 
-        String conteudo = payload.get("resumo"); // pega o campo "resumo" do JSON
+        String conteudo = payload.get("resumo"); 
         if (conteudo == null || conteudo.isEmpty()) {
             TranscriptionModel transcription = transcriptionService.findById(Long.parseLong(id));
             transcription.setConteudo("Erro ao processar a transcrição: conteúdo vazio");
@@ -272,6 +314,7 @@ public class UTranscriptController {
             transcription = transcriptionService.update(transcription);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(transcription);
         }
+        
         TranscriptionModel transcription = transcriptionService.findById(Long.parseLong(id));
         transcription.setStatus(statusTranscriptionRepository.findByDescricao("Concluído").orElse(null));
         transcription.setConteudo(conteudo);
@@ -283,20 +326,20 @@ public class UTranscriptController {
         return ResponseEntity.ok(transcription);
     }
 
-    
     private void enviarArquivoParaFastAPI(Long transcriptionId, File file, String token) throws IOException {
 
         System.out.println("Enviando arquivo para FastAPI...");
-        WebClient webClient = WebClient.builder().baseUrl("http://127.0.0.1:8000").defaultHeader("Authorization", token)
+        WebClient webClient = WebClient.builder().baseUrl(FASTAPI_URL).defaultHeader("Authorization", token)
                 .build();
 
-        // Convert MultipartFile to a temporary File
         try {
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
             builder.part("file", new FileSystemResource(file));
+            
             TranscriptionModel transcriptionUpdate = transcriptionService.findById(transcriptionId);
             transcriptionUpdate.setStatus(statusTranscriptionRepository.findByDescricao("Em Andamento").orElse(null));
             transcriptionService.update(transcriptionUpdate);
+            
             webClient.post()
                     .uri("/transcricao/" + transcriptionId)
                     .contentType(MediaType.MULTIPART_FORM_DATA)
@@ -314,5 +357,4 @@ public class UTranscriptController {
             throw new IOException("Erro ao enviar arquivo para FastAPI", e);
         }
     }
-
 }

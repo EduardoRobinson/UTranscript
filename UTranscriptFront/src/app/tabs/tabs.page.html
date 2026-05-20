@@ -1,35 +1,75 @@
-<ion-tabs>
-  <ion-tab-bar slot="bottom">
-    <ion-tab-button tab="tab1" href="/tabs/tab1">
-      <ion-icon aria-hidden="true" name="videocam-outline"></ion-icon>
-      <ion-label>Cadastrar video aula</ion-label>
-    </ion-tab-button>
+<ion-menu contentId="main-content" side="start">
+  <ion-content>
+    <div class="user-card">
+      <div class="avatar">
+        <ion-icon name="person-circle-outline"></ion-icon>
+      </div>
+      <div class="user-info">
+        <h2>{{ user?.nome }}</h2>
+        <p>{{ user?.universidade?.nome }}</p>
+        <p>{{ user?.curso?.nome }}</p>
+      </div>
+    </div>
 
-    <ion-tab-button tab="tab2" href="/tabs/tab2">
-      <ion-icon aria-hidden="true" name="folder-open-outline"></ion-icon>
-      <ion-label>Consultar transcrições</ion-label>
-    </ion-tab-button>
+    <ion-list>
+      <ion-menu-toggle auto-hide="true">
+        <ion-item routerLink="/criarResumo" routerDirection="root" lines="none">
+          <ion-icon name="videocam-outline" slot="start"></ion-icon>
+          <ion-label>Cadastrar video aula</ion-label>
+        </ion-item>
+      </ion-menu-toggle>
 
-    <ion-tab-button tab="tab3" href="/tabs/tab3">
-      <ion-icon aria-hidden="true" name="desktop-outline"></ion-icon>
-      <ion-label>Minhas transcrições</ion-label>
-    </ion-tab-button>
+      <ion-menu-toggle auto-hide="true">
+        <ion-item routerLink="/listarVideoAulas" routerDirection="root" lines="none">
+          <ion-icon name="folder-open-outline" slot="start"></ion-icon>
+          <ion-label>Consultar transcrições</ion-label>
+        </ion-item>
+      </ion-menu-toggle>
 
-     <ion-tab-button tab="tab4" href="/tabs/tab4">
-      <ion-icon aria-hidden="true" name="settings-outline"></ion-icon>
-      <ion-label>Configurações</ion-label>
-    </ion-tab-button>
+      <ion-menu-toggle auto-hide="true">
+        <ion-item routerLink="/minhasVideoAulas" routerDirection="root" lines="none">
+          <ion-icon name="desktop-outline" slot="start"></ion-icon>
+          <ion-label>Minhas transcrições</ion-label>
+        </ion-item>
+      </ion-menu-toggle>
 
-     <ion-tab-button tab="tab5" href="/tabs/tab5">
-      <ion-icon aria-hidden="true" name="download-outline"></ion-icon>
-      <ion-label>Youtube Downloader</ion-label>
-    </ion-tab-button>
-    
-  </ion-tab-bar>
+      <ion-menu-toggle auto-hide="true">
+        <ion-item routerLink="/configuracao" routerDirection="root" lines="none">
+          <ion-icon name="settings-outline" slot="start"></ion-icon>
+          <ion-label>Configurações</ion-label>
+        </ion-item>
+      </ion-menu-toggle>
 
+      <ion-menu-toggle auto-hide="true">
+        <ion-item routerLink="/youtubeDownloader" routerDirection="root" lines="none">
+          <ion-icon name="download-outline" slot="start"></ion-icon>
+          <ion-label>Youtube Downloader</ion-label>
+        </ion-item>
+      </ion-menu-toggle>
+    </ion-list>
+  </ion-content>
 
-  <ion-button color="danger" (click)="logout()" class="logout-button">
-    <ion-icon name="log-out-outline" slot="start"></ion-icon>
-    Logout
-  </ion-button>
-</ion-tabs>
+  <ion-footer class="ion-no-border">
+    <div class="logout-container" style="padding: 16px;">
+      <ion-button expand="block" color="danger" (click)="logout()">
+        <ion-icon name="log-out-outline" slot="start"></ion-icon>
+        Sair
+      </ion-button>
+    </div>
+  </ion-footer>
+</ion-menu>
+
+<div class="ion-page" id="main-content">
+  <ion-header>
+    <ion-toolbar>
+      <ion-buttons slot="start">
+        <ion-menu-button></ion-menu-button>
+      </ion-buttons>
+      <ion-title>UTranscript</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content>
+    <ion-router-outlet></ion-router-outlet>
+  </ion-content>
+</div>

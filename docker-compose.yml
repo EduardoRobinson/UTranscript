@@ -1,0 +1,91 @@
+services:
+  # Banco de Dados
+  db:
+    image: postgres:15-alpine
+    container_name: db-tcc
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - utranscript-network
+
+  # Microserviço Python (IA)
+  micro-python:
+    build: ./microService
+    container_name: ai-python
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./microService:/app
+      - shared-files:/app/shared-files
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - SPRING_API_URL=${SPRING_API_URL}
+      - HF_TOKEN=${HF_TOKEN}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - utranscript-network
+
+  # API Spring Boot
+  api-spring:
+    build: ./UTranscriptBack
+    container_name: backend-spring
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    volumes:
+      - ~/.gradle:/root/.gradle
+      - shared-files:/app/shared-files
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      FASTAPI_URL: ${FASTAPI_URL}
+    networks:
+      - utranscript-network
+
+  # Front-end Angular
+  frontend:
+    build: ./UTranscriptFront
+    container_name: frontend-angular
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./UTranscriptFront:/app
+      - /app/node_modules
+    depends_on:
+      - api-spring
+    networks:
+      - utranscript-network
+
+  # Servidor PlantUML (Corrigido para o nível correto)
+  plantuml-server:
+    image: plantuml/plantuml-server:jetty
+    container_name: plantuml-server
+    ports:
+      - "8085:8080"
+    restart: always
+    networks:
+      - utranscript-network
+
+# Definição das Redes e Volumes
+networks:
+  utranscript-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  shared-files:

@@ -1,10 +1,60 @@
-.logout-button{
-    --padding-start: 8px;
-  --padding-end: 8px;
-  --padding-top: 4px;
-  --padding-bottom: 4px;
-  font-size: 0.8rem;
-  height: 32px;
-  --border-radius: 6px;
-  width: 10%;
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  margin: 12px;
+  border-radius: 16px;
+
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.avatar ion-icon {
+  font-size: 48px;
+}
+
+.user-info h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.user-info p {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+ion-item {
+  --border-radius: 12px;
+  margin: 4px 8px;
+}
+
+ion-item:hover {
+  --background: rgba(0, 0, 0, 0.05);
+}
+
+.logout-container {
+  bottom: 20px;
+  width: 100%;
+  padding: 0 16px;
+}
+
+/* Aplica a fonte diretamente no item, que repassa para os filhos */
+ion-item {
+  --border-radius: 12px;
+  margin: 4px 8px;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Força a fonte no label caso o item não consiga repassar */
+ion-item ion-label {
+  font-family: 'Poppins', sans-serif !important;
+}
+
+ion-item:hover {
+  --background: rgba(0, 0, 0, 0.05);
 }

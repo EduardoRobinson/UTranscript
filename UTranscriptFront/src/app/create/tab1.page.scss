@@ -7,10 +7,34 @@
 }
 
 ion-card-content {
-  max-height: 60vh;
+  max-height: 80vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+
+/* Centraliza o card e define uma largura máxima para não quebrar em telas de PC */
+.container-fixo {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100%;
+}
+
+.videoaula-card {
+  width: 100%;
+  max-width: 800px; /* Limita a largura em telas grandes */
+  margin: 20px auto;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  border-radius: 8px;
+}
+
+/* Remove bordas extras dos itens internos se necessário */
+ion-item {
+  --inner-padding-end: 0;
+  --padding-start: 0;
+  margin-bottom: 10px;
+}
+
 

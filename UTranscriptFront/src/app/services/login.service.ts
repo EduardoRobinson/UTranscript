@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
-import { LoginRequest, LoginResponse } from '../types/User';
+import { Observable, tap, switchMap, finalize } from 'rxjs';
+import { LoginRequest, LoginResponse, User } from '../types/User';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -13,35 +13,40 @@ export class LoginService {
 
   constructor(private http: HttpClient) {}
 
-  login(data: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(this.apiUrl, data).pipe(
-      tap((response: LoginResponse) => {
-        localStorage.setItem('token', response.token);
-        this.http.get(`${environment.apiUrl}/auth/user`, {
-          headers: new HttpHeaders({
-          }).set('Authorization', `Bearer ${response.token}`)
-        }).subscribe((user: any) => {
-          localStorage.setItem('user', JSON.stringify(user));
-        });
+ login(data: LoginRequest): Observable<LoginResponse> {
+ 
+  return this.http.post<LoginResponse>(this.apiUrl, data, { withCredentials: true }).pipe(
+    switchMap(() => {
+      return this.http.get(`${environment.apiUrl}/auth/user`, { withCredentials: true });
+    }),
+    tap((user: any) => {
+      sessionStorage.setItem('user', JSON.stringify(user));
+    })
+  );
+}
+
+  logout(): Observable<any> {
+    // Adicionei { withCredentials: true } caso sua API precise validar o cookie antes de apagar
+    return this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true }).pipe(
+      finalize(() => {
+        // O finalize SEMPRE roda, tanto em caso de sucesso (next) quanto de erro (error)
+        this.limparSessao();
       })
     );
   }
 
-  logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  }
+private limparSessao() {
+  console.log('Limpando o sessionStorage...');
+  sessionStorage.clear(); // Remove os dados do usuário 
+}
 
-  isLoggedIn(): boolean {
-    return !!localStorage.getItem('token');
-  }
-
-  getToken(): string | null {
-    return localStorage.getItem('token');
+ isLoggedIn(): boolean {
+    return !!sessionStorage.getItem('user');
   }
 
   getUser(): any {
-    const user = localStorage.getItem('user');
+    // Busca o usuário no sessionStorage
+    const user = sessionStorage.getItem('user');
     return user ? JSON.parse(user) : null;
   }
 }

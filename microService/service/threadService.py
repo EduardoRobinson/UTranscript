@@ -4,6 +4,9 @@ import os
 from models import llmLoaded
 from service.TranscriptionService import Transcricao
 import requests
+import dotenv
+
+dotenv.load_dotenv()
 
 class FakeUploadFile:
     """Simula um UploadFile assíncrono para uso posterior em thread."""
@@ -32,7 +35,7 @@ class ThreadService:
         fake_upload = FakeUploadFile(file_path)
         try:
             result = asyncio.run(transcricao.transcrever(fake_upload))
-            spring_url = f"http://localhost:8080/transcription/{id}"
+            spring_url = os.getenv("SPRING_API_URL") + f"/transcription/{id}"
             if auth_header.startswith("Bearer "):
                 token = auth_header[len("Bearer "):]
             else:
@@ -51,10 +54,9 @@ class ThreadService:
                 json=payload,  # conteúdo textual direto
                 headers=headers  # importante isso aqui!
             )
-            print(result.resumo)
             print(f"[{id}] Status da requisição: {response.status_code}")
         except Exception as e:
-            spring_url = f"http://localhost:8080/transcription/{id}"
+            spring_url = os.getenv("SPRING_API_URL") + f"/transcription/{id}"
             if auth_header.startswith("Bearer "):
                 token = auth_header[len("Bearer "):]
             else:

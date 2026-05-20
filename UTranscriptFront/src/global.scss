@@ -34,9 +34,19 @@
 
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import "@ionic/angular/css/palettes/dark.system.css";
 @import "https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap";
 /* Aplica a fonte pra geral */
 * {
   font-family: 'Poppins', sans-serif;
+}
+
+:root {
+  --ion-background-color: #ffffff;
+  --ion-text-color: #000000;
+}
+
+/* Garante que o VLibras fique por cima da interface do Ionic */
+.vw-plugin-wrapper,
+[vw-access-button] {
+  z-index: 99999 !important; 
 }

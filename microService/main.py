@@ -2,7 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.endpoints import router as router
 from models.llmLoaded import llmLoaded
+import torch
 
+print(f"CUDA está disponível? {torch.cuda.is_available()}")
+print(f"Nome da GPU: {torch.cuda.get_device_name(0)}")
 app=FastAPI()
 print("🚀 Iniciando app e carregando modelo LLM...")
 llm_instance = llmLoaded()

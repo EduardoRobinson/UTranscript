@@ -1,3 +1,5 @@
+import { User } from "./User";
+
 export type FormVideoAula = {
 
   titulo: string;
@@ -50,10 +52,6 @@ export type VideoAula = {
     transcricoes?: Transcript;
     icone?: string;
     corIcone?: string;
-    usuario?: {
-        id: number;
-        nome: string;
-        email: string;
-    };
+    usuario:User;
 }
 

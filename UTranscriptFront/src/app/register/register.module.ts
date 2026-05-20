@@ -5,7 +5,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RegisterComponent  } from './register.component';
 import { ExploreContainerComponentModule } from '../explore-container/explore-container.module';
 import { RegisterRoutingModule } from './register-routing.module';
-import { RegisterService } from '../services/register.service';
+import { IonicSelectableComponent } from 'ionic-selectable';
 
 
 @NgModule({
@@ -15,7 +15,8 @@ import { RegisterService } from '../services/register.service';
     FormsModule,
     ExploreContainerComponentModule,
     ReactiveFormsModule,
-    RegisterRoutingModule
+    RegisterRoutingModule,
+    IonicSelectableComponent
   ],
   declarations: [RegisterComponent ],
   exports: [RegisterComponent],

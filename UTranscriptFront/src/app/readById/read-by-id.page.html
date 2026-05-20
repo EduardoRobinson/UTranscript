@@ -87,6 +87,9 @@
       <p>
         <strong>Data de Criação:</strong> {{videoAula.data| date:'dd/MM/yyyy'}}
       </p>
+      <p>
+        <strong>Autor:</strong> {{videoAula.usuario.nome}} ({{videoAula.usuario.email}})
+      </p>
     </ion-card-content>
     <ion-button (click)="salvarEdicao()" *ngIf="Editable" id="salvar-edicao"
       >Salvar Edição</ion-button

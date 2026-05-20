@@ -53,29 +53,53 @@ class Transcricao:
 
         return await self.gerar_resumo(texto)
 
+    # Seu arquivo de Transcricao
     async def gerar_resumo(self, texto):
         total_etapas = 2
         etapa = 1
 
-        self.log_progresso(etapa, total_etapas, "Montando prompt para geração de resumo...")
+        self.log_progresso(etapa, total_etapas, "Montando prompt estruturado...")
 
-        prompt = (
-            "Resuma a transcrição abaixo feita da video aula como se fosse um relatório, "
-            "sem caracteres especiais, e com os temas abordados, trazendo da literatura da área referências quando possível:\n"
-            f"{texto}\nResumo:"
+        messages = [
+            {
+                "role": "system", 
+                "content": (
+                    "Você é um assistente acadêmico especializado em síntese de conteúdo. "
+                    "Crie um relatório objetivo da videoaula abaixo. Use linguagem formal, "
+                    "cite conceitos da literatura de sistemas operacionais se aplicável. "
+                    "IMPORTANTE: Não adicione avisos de tradução, notas de revisão ou repetições ao final. "
+                    "Termine o texto assim que concluir o resumo dos temas."
+                )
+            },
+            {
+                "role": "user", 
+                "content": f"Transfira esta transcrição em um resumo estruturado sem caracteres especiais:\n\n{texto}"
+            },
+        ]
+
+        prompt = self.llm_pipeline.tokenizer.apply_chat_template(
+            messages, 
+            tokenize=False, 
+            add_generation_prompt=True
         )
 
         etapa += 1
-        self.log_progresso(etapa, total_etapas, "Executando pipeline LLM para geração de resumo...")
+        self.log_progresso(etapa, total_etapas, "Gerando resumo sem repetições...")
 
         try:
-            output = self.llm_pipeline(prompt, do_sample=True, temperature=0.7, max_new_tokens=2048, truncation=True)
+            output = self.llm_pipeline(
+                prompt, 
+                max_new_tokens=1024, # 2048 era muito, facilitava o loop
+                do_sample=True,
+                temperature=0.6,
+                eos_token_id=[
+                    self.llm_pipeline.tokenizer.eos_token_id,
+                    self.llm_pipeline.tokenizer.convert_tokens_to_ids("<|eot_id|>") # Token de parada do Llama 3
+                ]
+            )
+            
             resposta_completa = output[0]["generated_text"]
-            if resposta_completa.startswith(prompt):
-                resumo = resposta_completa[len(prompt):].strip()
-            else:
-                resumo = resposta_completa.strip()
-
+            resumo = resposta_completa[len(prompt):].strip()
             logger.info("Resumo gerado com sucesso.")
         except Exception as e:
             logger.error(f"Erro ao gerar resumo: {e}", exc_info=True)

@@ -158,6 +158,6 @@ export class Tab2Page {
   }
 
   abrirVideoAula(id?: number) {
-    this.router.navigate(['/tabs/tab2', id]);
+    this.router.navigate(['/videoaula', id]);
   }
 }

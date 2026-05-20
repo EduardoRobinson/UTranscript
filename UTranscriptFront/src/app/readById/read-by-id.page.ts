@@ -40,7 +40,7 @@ export class ReadByIdPage implements OnInit {
             return;
           }
           this.videoAula = videoAula;
-          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          const user = JSON.parse(sessionStorage.getItem('user') || '{}');
 
           this.isCreator = user.id === videoAula?.usuario?.id;
           this.carregarDadosIniciais();

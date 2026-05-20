@@ -19,6 +19,7 @@ public class VideoAulaModel {
     private Long id;
 
     private String titulo;
+    private String videoUrl;
     private LocalDate data;
     private String professor;
 

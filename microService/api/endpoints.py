@@ -62,17 +62,25 @@ async def youtube_download(data: dict = Body(...)):
     video_url = data.get("video_url")
     if not video_url:
         return {"error": "Parâmetro 'video_url' é obrigatório."}
-    pasta = "downloads"
+    
+    # 🔥 Apontando para o volume compartilhado do Docker
+    pasta = "shared-files"
+    
+    # Garante que a pasta existe
     if not os.path.exists(pasta):
         os.makedirs(pasta)
         print(f'Pasta criada: {pasta}')
-    if os.path.exists(pasta):
-        for arquivo in os.listdir(pasta):
-            caminho_arquivo = os.path.join(pasta, arquivo)
-            if os.path.isfile(caminho_arquivo):
+    
+    # Limpa os arquivos antigos (o 'else' foi removido para evitar falsos positivos)
+    for arquivo in os.listdir(pasta):
+        caminho_arquivo = os.path.join(pasta, arquivo)
+        if os.path.isfile(caminho_arquivo):
+            try:
                 os.remove(caminho_arquivo)
                 print(f'Deletado: {caminho_arquivo}')
-        else:
-            print('Pasta não encontrada.')
+            except Exception as e:
+                print(f'Erro ao deletar {caminho_arquivo}: {e}')
+                
+    # Inicializa o serviço e inicia o download
     download = YoutubeService(video_url)
     return download.baixar_video()

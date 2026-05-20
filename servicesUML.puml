@@ -1,0 +1,63 @@
+@startuml
+class com.example.UTranscriptBack.services.JwtService {
+- {static} String SECRET
++ String gerarToken(String)
++ String extrairEmail(String)
+}
+
+
+class com.example.UTranscriptBack.services.AuthService {
+- UserRepository usuarioRepo
+- PasswordEncoder passwordEncoder
++ UserModel registrar(RegistroDTO)
++ UserModel autenticar(LoginDTO)
+}
+
+
+class com.example.UTranscriptBack.services.VideoAulaService {
+- VideoAulaRepository repo
+- CursoService cursoRepo
+- UniversidadeService universidadeRepo
+- TemaService temaRepo
+- TranscriptionService transcriptionRepo
++ VideoAulaModel create(VideoAulaDTO,UserModel)
++ VideoAulaModel findById(Long)
++ List<VideoAulaModel> findAll()
++ void delete(VideoAulaModel)
++ VideoAulaModel update(String,VideoAulaModel)
+}
+
+
+class com.example.UTranscriptBack.services.TemaService {
+- TemaRepository repo
++ List<TemaModel> findAll()
++ List<TemaModel> findByCursoId(Long)
++ TemaModel findById(Long)
+}
+
+
+class com.example.UTranscriptBack.services.UniversidadeService {
+- UniversidadeRepository repo
++ List<UniversidadeModel> findAll()
++ UniversidadeModel findById(Long)
+}
+
+
+class com.example.UTranscriptBack.services.CursoService {
+- CursoRepository repo
++ List<CursoModel> findAll()
++ CursoModel findById(Long)
+}
+
+
+class com.example.UTranscriptBack.services.TranscriptionService {
+- TranscriptionRepository repo
++ TranscriptionModel create(TranscriptionModel)
++ TranscriptionModel findByVideoAulaId(Long)
++ void deleteByVideoAula(Long)
++ TranscriptionModel update(TranscriptionModel)
++ TranscriptionModel findById(Long)
+}
+
+
+@enduml

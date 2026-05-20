@@ -1,0 +1,75 @@
+@startuml
+!theme plain
+skinparam classAttributeIconSize 0
+
+' --- Definição das Classes ---
+
+class CursoModel {
+    - Long id
+    - String nome
+}
+
+class StatusTranscriptionModel {
+    - Long id
+    - String descricao
+}
+
+class TemaModel {
+    - Long id
+    - String descricao
+}
+
+class TranscriptionModel {
+    - Long id
+    - String conteudo
+}
+
+class UniversidadeModel {
+    - Long id
+    - String nome
+    - String sigla
+}
+
+class UserModel {
+    - Long id
+    - String nome
+    - String email
+    - String senha
+}
+
+class VideoAulaModel {
+    - Long id
+    - String titulo
+    - String videoUrl
+    - LocalDate data
+    - String professor
+}
+
+' --- Relacionamentos (Setas) ---
+
+' Muitos Temas pertencem a um Curso
+TemaModel "*" --> "1" CursoModel : curso_id
+
+' Muitos Vídeos pertencem a um Curso
+VideoAulaModel "*" --> "1" CursoModel : curso_id
+
+' Muitos Vídeos pertencem a uma Universidade
+VideoAulaModel "*" --> "1" UniversidadeModel : universidade_id
+
+' Muitos Vídeos pertencem a um Tema
+VideoAulaModel "*" --> "1" TemaModel : tema_id
+
+' Muitos Vídeos pertencem a um Usuário
+VideoAulaModel "*" --> "1" UserModel : usuario_id
+
+' Relação 1 para 1 entre Vídeo e Transcrição
+VideoAulaModel "1" -- "1" TranscriptionModel : video_aula_id
+
+' Muitas Transcrições possuem um Status
+TranscriptionModel "*" --> "1" StatusTranscriptionModel : status_id
+
+UserModel "*" --> "1" UniversidadeModel : universidade_id
+
+UserModel "*" --> "1" CursoModel : curso_id
+
+@enduml

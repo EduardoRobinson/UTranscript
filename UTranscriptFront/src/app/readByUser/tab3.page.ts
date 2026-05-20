@@ -154,6 +154,6 @@ export class Tab3Page {
     await toast.present();
   }
   abrirVideoAula(id?: number) {
-    this.router.navigate(['/tabs/tab2', id]);
+    this.router.navigate(['/videoaula', id]);
   }
 }

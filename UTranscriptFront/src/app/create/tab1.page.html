@@ -3,8 +3,8 @@
     <ion-title>Cadastro de Videoaula</ion-title>
   </ion-toolbar>
 </ion-header>
-
-<ion-card position="floating" class="videoaula-card">
+<ion-content class="ion-padding"> <div class="container-fixo">
+<ion-card class="videoaula-card">
   <ion-card-content>
     <form [formGroup]="formVideoAula" (ngSubmit)="salvarVideoaula()">
       <ion-item>
@@ -128,10 +128,13 @@
       </ion-text>
 
       <ion-item
-        ><ion-button expand="full" type="submit" position="floating"
+        ><ion-button expand="full" type="submit" position="floating" style="color:white;"
+       color="success" [disabled]="formVideoAula.invalid || arquivoSelecionado === null"
           >Salvar Videoaula</ion-button
         ></ion-item
       >
     </form>
   </ion-card-content>
 </ion-card>
+</div>
+</ion-content>
