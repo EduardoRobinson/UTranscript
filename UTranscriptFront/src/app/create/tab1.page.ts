@@ -33,6 +33,7 @@ export class Tab1Page implements OnInit {
       universidadeId: [null, Validators.required],
       temaId: [null, Validators.required],
       data: [null],
+      promptPersonalizado: [null],
     });
   }
 

@@ -7,40 +7,70 @@ from dto.videoAulaDTO import VideoAulaDTO
 from models.llmLoaded import llmLoaded
 from service.YoutubeService import YoutubeService
 from service.TranscriptionService import Transcricao
-from fastapi import APIRouter, Path,Request,File, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Path,Request,File, UploadFile, Form
+from fastapi.responses import FileResponse, JSONResponse
 import os
 from fastapi import Body,Request
 from service.threadService import ThreadService
+from service.EvaluationService import EvaluationService
+from dto.avaliacaoDTO import AvaliacaoRequest
 
 from service.pdfService import pdfService
+
+avaliacao_service = EvaluationService()
 
 router = APIRouter()
 
 
 @router.get("/health")
-async def health_check():
-    """Endpoint de verificação de saúde."""
-    return {"status": "ok"}
+async def health_check(request: Request):
+    """Endpoint de verificação de saúde dos três modelos."""
+    llm = getattr(request.app.state, "llm", None)
+    juiz = getattr(request.app.state, "juiz", None)
+    modelos = {
+        "llama": llm is not None and getattr(llm, "llm_pipeline", None) is not None,
+        "whisper": llm is not None and getattr(llm, "transcribe_model", None) is not None,
+        "qwen": juiz is not None and getattr(juiz, "model", None) is not None,
+    }
+    pronto = all(modelos.values())
+    corpo = {"status": "ok" if pronto else "indisponivel", "modelos": modelos}
+    if not pronto:
+        return JSONResponse(status_code=503, content=corpo)
+    return corpo
 
 @router.post("/transcricao/{id}")
 async def create_transcricao(
     request: Request,
     id: int = Path(...), 
     file: UploadFile = File(...) ,
+    prompt: str | None = Form(default=None),
 ):
     print(f"ID recebido: {id}")
     auth_header = request.headers.get("authorization") 
     print(f"Nome do arquivo recebido: {file.filename}")
+    prompt_personalizado = prompt.strip() if prompt and prompt.strip() else None
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp:
         shutil.copyfileobj(file.file, temp)
         temp_path = temp.name
     llm = request.app.state.llm
     service = ThreadService()
-    thread = Thread(target=service.transcrever_em_thread, args=(id, temp_path,llm,auth_header))
+    thread = Thread(target=service.transcrever_em_thread, args=(id, temp_path,llm,auth_header, prompt_personalizado))
     thread.start()
     
     return {"msg": "Recebido com sucesso", "id": id, "filename": file.filename}
+
+
+@router.post("/avaliar/{id}")
+def avaliar(id: int, pedido: AvaliacaoRequest, request: Request):
+    """Aceita a avaliação e devolve a resposta antes do cálculo terminar."""
+    auth_header = request.headers.get("authorization") or ""
+    service = ThreadService()
+    thread = Thread(
+        target=service.avaliar_em_thread,
+        args=(id, pedido, auth_header, avaliacao_service),
+    )
+    thread.start()
+    return {"msg": "Recebido com sucesso", "id": id}
 
 
 @router.post("/videoAula_pdf")

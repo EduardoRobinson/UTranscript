@@ -43,6 +43,8 @@ export class Tab5Page {
         },
         (error) => {
           console.error('Erro ao baixar vídeo:', error);
+          loading.dismiss();
+          alert('Não foi possível baixar o vídeo. Tente novamente em instantes.');
         }
       );
     } else {

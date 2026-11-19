@@ -20,7 +20,7 @@ export class LoginService {
       return this.http.get(`${environment.apiUrl}/auth/user`, { withCredentials: true });
     }),
     tap((user: any) => {
-      sessionStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(user));
     })
   );
 }
@@ -35,18 +35,16 @@ export class LoginService {
     );
   }
 
-private limparSessao() {
-  console.log('Limpando o sessionStorage...');
-  sessionStorage.clear(); // Remove os dados do usuário 
+limparSessao() {
+  localStorage.removeItem('user');
 }
 
  isLoggedIn(): boolean {
-    return !!sessionStorage.getItem('user');
+    return !!localStorage.getItem('user');
   }
 
   getUser(): any {
-    // Busca o usuário no sessionStorage
-    const user = sessionStorage.getItem('user');
+    const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
   }
 }

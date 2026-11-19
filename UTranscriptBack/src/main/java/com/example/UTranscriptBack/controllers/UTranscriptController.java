@@ -5,6 +5,7 @@ import org.springframework.http.MediaType;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,6 +21,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,6 +34,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.example.UTranscriptBack.dto.VideoAulaDTO;
 import com.example.UTranscriptBack.dto.YoutubeRequestDTO;
@@ -136,9 +141,16 @@ public class UTranscriptController {
 
         VideoAulaModel v = service.create(dto, user);
         
+        String promptPersonalizado = dto.promptPersonalizado == null ? null : dto.promptPersonalizado.trim();
+        boolean extracaoPersonalizada = promptPersonalizado != null && !promptPersonalizado.isEmpty();
+
         TranscriptionModel transcription = new TranscriptionModel();
         transcription.setVideoAula(v);
         transcription.setConteudo("");
+        transcription.setTipoExtracao(extracaoPersonalizada ? "PERSONALIZADO" : "COMUM");
+        if (extracaoPersonalizada) {
+            transcription.setPromptPersonalizado(promptPersonalizado);
+        }
         
         Optional<StatusTranscriptionModel> statusOptional = statusTranscriptionRepository.findByDescricao("Pendente");
         if (!statusOptional.isPresent()) {
@@ -172,11 +184,12 @@ public class UTranscriptController {
         final Long transcriptionId = transcription.getId();
         final File finalTempFile = tempFile;
         final String finalToken = tokenFromCookie; // Token extraído do cookie para enviar ao FastAPI
+        final String promptParaExtracao = extracaoPersonalizada ? promptPersonalizado : null;
 
         executorService.submit(() -> {
             try {
                 // Envia como Bearer token para o FastAPI, se ele exigir
-                enviarArquivoParaFastAPI(transcriptionId, finalTempFile, "Bearer " + finalToken);
+                enviarArquivoParaFastAPI(transcriptionId, finalTempFile, "Bearer " + finalToken, promptParaExtracao);
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
@@ -271,6 +284,134 @@ public class UTranscriptController {
         return new ResponseEntity<>(response.getBody(), responseHeaders, HttpStatus.OK);
     }
 
+    @PostMapping("/video-aula/{id}/avaliar")
+    public ResponseEntity<?> avaliarVideoAula(@PathVariable Long id, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+        if (!UserModel.class.isInstance(user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        VideoAulaModel videoAula;
+        try {
+            videoAula = service.findById(id);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+
+        TranscriptionModel transcription = videoAula.getTranscricoes();
+        if (transcription == null) {
+            return ResponseEntity.badRequest().body(Map.of("erro", "A videoaula não possui transcrição."));
+        }
+
+        String status = transcription.getStatus() != null ? transcription.getStatus().getDescricao() : null;
+        if (!"Concluído".equals(status)
+                || transcription.getPrompt() == null || transcription.getPrompt().isBlank()
+                || transcription.getConteudo() == null || transcription.getConteudo().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "erro", "A transcrição precisa estar concluída, com prompt e conteúdo."));
+        }
+
+        transcription.setStatusAvaliacao("Em Andamento");
+        transcription.setAvaliacao(null);
+        transcriptionService.update(transcription);
+
+        String tokenFromCookie = "";
+        if (request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("token".equals(cookie.getName())) {
+                    tokenFromCookie = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        final Long transcriptionId = transcription.getId();
+        final String token = tokenFromCookie;
+        final String prompt = transcription.getPrompt();
+        final String resultado = transcription.getConteudo();
+
+        executorService.submit(() -> enviarAvaliacaoParaFastAPI(transcriptionId, token, prompt, resultado));
+
+        return ResponseEntity.ok(Map.of("msg", "Avaliação em andamento", "id", id));
+    }
+
+    private void enviarAvaliacaoParaFastAPI(Long transcriptionId, String token, String prompt, String resultado) {
+        Map<String, Object> corpo = Map.of(
+                "aderencia", List.of(Map.of(
+                        "prompt", prompt,
+                        "resultado", resultado)));
+
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(10));
+        factory.setReadTimeout(Duration.ofSeconds(30));
+
+        RestTemplate restTemplate = new RestTemplate(factory);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(corpo, headers);
+
+        try {
+            restTemplate.postForEntity(
+                    FASTAPI_URL.concat("/avaliar/" + transcriptionId), requestEntity, Map.class);
+        } catch (Exception e) {
+            TranscriptionModel transcription = transcriptionService.findById(transcriptionId);
+            if (transcription == null) {
+                return;
+            }
+            transcription.setStatusAvaliacao("Erro");
+            transcription.setAvaliacao("Falha ao enviar a avaliação: " + e.getMessage());
+            transcriptionService.update(transcription);
+        }
+    }
+
+    @PutMapping("/transcription/{id}/avaliacao")
+    public ResponseEntity<TranscriptionModel> atualizarAvaliacao(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> payload) {
+
+        TranscriptionModel transcription = transcriptionService.findById(Long.parseLong(id));
+        if (transcription == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        if (payload.get("erro") != null) {
+            transcription.setStatusAvaliacao("Erro");
+            transcription.setAvaliacao(String.valueOf(payload.get("erro")));
+        } else {
+            try {
+                transcription.setStatusAvaliacao("Concluído");
+                transcription.setAvaliacao(new ObjectMapper().writeValueAsString(payload));
+            } catch (JsonProcessingException e) {
+                transcription.setStatusAvaliacao("Erro");
+                transcription.setAvaliacao("Falha ao gravar a avaliação.");
+            }
+        }
+
+        transcription = transcriptionService.update(transcription);
+        return ResponseEntity.ok(transcription);
+    }
+
+    @PutMapping("/transcription/{id}/prompt")
+    public ResponseEntity<TranscriptionModel> salvarPrompt(
+            @PathVariable String id,
+            @RequestBody Map<String, String> payload) {
+
+        TranscriptionModel transcription = transcriptionService.findById(Long.parseLong(id));
+        if (transcription == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        String prompt = payload.get("prompt");
+        if (prompt == null || prompt.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        transcription.setPrompt(prompt);
+        transcription = transcriptionService.update(transcription);
+        return ResponseEntity.ok(transcription);
+    }
+
     @DeleteMapping("/video-aula/{id}")
     public ResponseEntity<Void> deletarVideoAula(@PathVariable Long id, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
@@ -318,6 +459,7 @@ public class UTranscriptController {
         TranscriptionModel transcription = transcriptionService.findById(Long.parseLong(id));
         transcription.setStatus(statusTranscriptionRepository.findByDescricao("Concluído").orElse(null));
         transcription.setConteudo(conteudo);
+        transcription.setPrompt(payload.get("prompt"));
         transcription = transcriptionService.update(transcription);
 
         if (transcription == null) {
@@ -326,7 +468,7 @@ public class UTranscriptController {
         return ResponseEntity.ok(transcription);
     }
 
-    private void enviarArquivoParaFastAPI(Long transcriptionId, File file, String token) throws IOException {
+    private void enviarArquivoParaFastAPI(Long transcriptionId, File file, String token, String prompt) throws IOException {
 
         System.out.println("Enviando arquivo para FastAPI...");
         WebClient webClient = WebClient.builder().baseUrl(FASTAPI_URL).defaultHeader("Authorization", token)
@@ -335,6 +477,9 @@ public class UTranscriptController {
         try {
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
             builder.part("file", new FileSystemResource(file));
+            if (prompt != null && !prompt.isBlank()) {
+                builder.part("prompt", prompt);
+            }
             
             TranscriptionModel transcriptionUpdate = transcriptionService.findById(transcriptionId);
             transcriptionUpdate.setStatus(statusTranscriptionRepository.findByDescricao("Em Andamento").orElse(null));

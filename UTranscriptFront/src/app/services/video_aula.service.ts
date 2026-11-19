@@ -1,7 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { environment } from "src/environments/environment";
-import { Curso, FormVideoAula, Tema, Universidade, VideoAula } from "../types/VideoAula";
+import { Curso, FormVideoAula, Tema, Universidade, VideoAula, AvaliacaoIniciada } from "../types/VideoAula";
 import { Observable } from "rxjs";
 
 @Injectable({
@@ -53,6 +53,10 @@ export class VideoAulaService {
 
     updateVideoAula(id: number, data: VideoAula): Observable<VideoAula> {
         return this.http.put<VideoAula>(`${this.apiUrl}/video-aula/${id}`, data);
+    }
+
+    avaliarVideoAula(id: number): Observable<AvaliacaoIniciada> {
+        return this.http.post<AvaliacaoIniciada>(`${this.apiUrl}/video-aula/${id}/avaliar`, {});
     }
 
   }

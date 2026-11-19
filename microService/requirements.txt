@@ -19,7 +19,14 @@ sentencepiece
 einops==0.7.0
 
 # --- Processamento de Documentos ---
-pytubefix
+pytubefix==11.1.0
 jinja2
 pdfkit
 weasyprint
+
+# --- Avaliação (Hugging Face Evaluate) ---
+evaluate==0.4.3
+rouge-score==0.1.2
+absl-py
+nltk
+jiwer>=3.0.3

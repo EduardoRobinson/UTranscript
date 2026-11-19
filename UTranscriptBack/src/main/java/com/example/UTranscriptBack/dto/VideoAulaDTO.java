@@ -10,4 +10,5 @@ public class VideoAulaDTO {
     public Long cursoId;
     public Long universidadeId;
     public Long temaId;
+    public String promptPersonalizado;
 }

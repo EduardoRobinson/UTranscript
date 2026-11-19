@@ -14,11 +14,13 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @Entity
 @Data
+@ToString(exclude = "videoAula")
 @NoArgsConstructor
 @AllArgsConstructor
 public class TranscriptionModel {
@@ -38,5 +40,19 @@ public class TranscriptionModel {
     @JoinColumn(name = "status_id")
     private StatusTranscriptionModel status;
 
+    @Column(name = "tipo_extracao", nullable = false, length = 20)
+    private String tipoExtracao = "COMUM";
+
+    @Column(columnDefinition = "TEXT")
+    private String prompt;
+
+    @Column(name = "prompt_personalizado", columnDefinition = "TEXT")
+    private String promptPersonalizado;
+
+    @Column(name = "status_avaliacao", length = 30)
+    private String statusAvaliacao;
+
+    @Column(columnDefinition = "TEXT")
+    private String avaliacao;
 
 }

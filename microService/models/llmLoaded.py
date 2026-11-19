@@ -1,4 +1,6 @@
 import gc
+import logging
+import threading
 import torch
 import os
 from transformers import (
@@ -13,18 +15,22 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+logger = logging.getLogger("Inicializacao")
+
 class llmLoaded:
     def __init__(self):
+        self.geracao_lock = threading.Lock()
         self.llm_pipeline = self.load_llm_pipeline()
-        print("🔁 Carregando Whisper (Distil-Large-V3) na GPU...")
+        logger.info("Carregando Whisper distil-large-v3 na GPU")
         self.transcribe_model = WhisperModel(
             "distil-large-v3", 
             device="cuda", 
             compute_type="int8_float16"
         )
+        logger.info("Whisper distil-large-v3 carregado")
         
     def load_llm_pipeline(self):
-        print("🔁 Carregando Llama-3.1-8B-Instruct em 4-bits...")
+        logger.info("Carregando Llama-3.1-8B-Instruct em 4 bits na GPU")
         model_id = "meta-llama/Llama-3.1-8B-Instruct"
         token = os.getenv("HF_TOKEN")
 
@@ -70,9 +76,10 @@ class llmLoaded:
         gc.collect()
         torch.cuda.empty_cache()
 
-        # ✅ Remova o parâmetro generation_config da chamada do pipeline
-        return pipeline(
+        gerador = pipeline(
             "text-generation", 
             model=model, 
             tokenizer=tokenizer
         )
+        logger.info(f"Llama-3.1-8B-Instruct carregado em {model.device}")
+        return gerador

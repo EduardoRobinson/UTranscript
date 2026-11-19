@@ -104,9 +104,40 @@
         <strong>Status:</strong> {{videoAula?.transcricoes?.status?.descricao}}
       </p>
       <p>
+        <strong>Tipo de extração:</strong>
+        {{videoAula?.transcricoes?.tipoExtracao === 'PERSONALIZADO' ? 'Personalizada' : 'Comum'}}
+      </p>
+      <p *ngIf="videoAula?.transcricoes?.promptPersonalizado">
+        <strong>Prompt personalizado:</strong>
+        {{videoAula?.transcricoes?.promptPersonalizado}}
+      </p>
+      <p>
         <strong>Conteúdo:</strong> {{videoAula?.transcricoes?.conteudo ?
         videoAula?.transcricoes?.conteudo : 'Transcrição não realizada'}}
       </p>
+    </ion-card-content>
+  </ion-card>
+  <ion-card *ngIf="videoAula?.transcricoes?.statusAvaliacao === 'Em Andamento'">
+    <ion-card-content>
+      Avaliação do resumo em andamento. O resultado aparece nesta página quando terminar.
+    </ion-card-content>
+  </ion-card>
+  <ion-card *ngIf="videoAula?.transcricoes?.statusAvaliacao === 'Erro'">
+    <ion-card-content>
+      <p><strong>Avaliação:</strong> {{videoAula?.transcricoes?.avaliacao}}</p>
+    </ion-card-content>
+  </ion-card>
+  <ion-card *ngIf="avaliacao?.aderencia?.amostras?.length">
+    <ion-card-header>
+      <ion-card-title>Avaliação do resumo</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p><strong>Nota:</strong> {{avaliacao?.aderencia?.amostras?.[0]?.nota}}</p>
+      <p><strong>Adesão:</strong> {{avaliacao?.aderencia?.amostras?.[0]?.adesao}}</p>
+      <p><strong>Fidelidade:</strong> {{avaliacao?.aderencia?.amostras?.[0]?.fidelidade}}</p>
+      <p><strong>Cobertura:</strong> {{avaliacao?.aderencia?.amostras?.[0]?.cobertura}}</p>
+      <p><strong>Organização:</strong> {{avaliacao?.aderencia?.amostras?.[0]?.organizacao}}</p>
+      <p><strong>Justificativa:</strong> {{avaliacao?.aderencia?.amostras?.[0]?.justificativa}}</p>
     </ion-card-content>
   </ion-card>
   <ion-card>
@@ -114,6 +145,10 @@
       <ion-button (click)="exportarParaPDF()">
         Exportar Conteúdo para PDF
         <ion-icon slot="end" name="download-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="avaliarResumo()" *ngIf="transcricaoPronta()" color="secondary">
+        Avaliar resumo
+        <ion-icon slot="end" name="checkmark-circle-outline"></ion-icon>
       </ion-button>
       <ion-button (click)="deleteVideoAula()" color="danger" *ngIf="isCreator">
         Apagar Vídeo

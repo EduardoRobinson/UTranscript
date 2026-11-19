@@ -1,14 +1,15 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { LoginService } from '../services/login.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
 
-  // Injetamos o Router para poder redirecionar o usuário caso o cookie expire
-  constructor(private router: Router) {}
+  // Injector evita dependência circular: LoginService usa HttpClient, que passa por este interceptor
+  constructor(private router: Router, private injector: Injector) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     
@@ -23,8 +24,8 @@ export class AuthInterceptor implements HttpInterceptor {
         
         // Se o Spring Boot retornar 401 (Unauthorized), o cookie expirou ou é inválido
         if (error.status === 401) {
-          sessionStorage.removeItem('user'); // Remove o usuário "falso" logado no front
-          this.router.navigate(['/login']);  // Joga de volta para o login
+          this.injector.get(LoginService).limparSessao();
+          this.router.navigate(['/login']);
         }
         
         // Repassa o erro para frente caso o componente queira tratá-lo

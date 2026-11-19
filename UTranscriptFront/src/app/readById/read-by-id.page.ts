@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { LoadingController, ToastController } from '@ionic/angular';
 import { VideoAulaService } from '../services/video_aula.service';
+import { LoginService } from '../services/login.service';
 import { Router } from '@angular/router';
-import { Curso, Tema, Universidade, VideoAula } from '../types/VideoAula';
+import { Curso, Tema, Universidade, VideoAula, AvaliacaoAula } from '../types/VideoAula';
 import { Location } from '@angular/common';
 
 @Component({
@@ -11,7 +12,7 @@ import { Location } from '@angular/common';
   styleUrls: ['./read-by-id.page.scss'],
   standalone: false,
 })
-export class ReadByIdPage implements OnInit {
+export class ReadByIdPage implements OnInit, OnDestroy {
   videoAula: VideoAula | undefined;
   isCreator: boolean = false;
   Editable: boolean = false;
@@ -19,8 +20,11 @@ export class ReadByIdPage implements OnInit {
   universidades: Universidade[] = [];
   temasSugeridos: Tema[] = [];
   videoAulaOriginal: any = null;
+  avaliacao: AvaliacaoAula | null = null;
+  private acompanhamento: ReturnType<typeof setInterval> | null = null;
   constructor(
     private videoAulaService: VideoAulaService,
+    private loginService: LoginService,
     private toastController: ToastController,
     private router: Router,
     private loadingCtrl: LoadingController,
@@ -40,7 +44,8 @@ export class ReadByIdPage implements OnInit {
             return;
           }
           this.videoAula = videoAula;
-          const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+          this.aplicarAvaliacaoSalva();
+          const user = this.loginService.getUser() || {};
 
           this.isCreator = user.id === videoAula?.usuario?.id;
           this.carregarDadosIniciais();
@@ -52,6 +57,10 @@ export class ReadByIdPage implements OnInit {
     } else {
       this.presentToast('ID do vídeo não encontrado.');
     }
+  }
+
+  ngOnDestroy() {
+    this.pararAcompanhamento();
   }
 
   carregarDadosIniciais() {
@@ -136,6 +145,92 @@ export class ReadByIdPage implements OnInit {
         this.presentToast('Erro ao baixar PDF: ' + err.message, 'danger');
       },
     });
+  }
+
+  transcricaoPronta(): boolean {
+    const transcricao = this.videoAula?.transcricoes;
+    return transcricao?.status?.descricao === 'Concluído'
+      && !!transcricao.prompt?.trim()
+      && !!transcricao.conteudo?.trim();
+  }
+
+  async avaliarResumo() {
+    if (!this.videoAula?.id) {
+      this.presentToast('Vídeo não carregado.', 'danger');
+      return;
+    }
+    if (!this.transcricaoPronta()) {
+      this.presentToast('A transcrição precisa estar concluída, com prompt e conteúdo.', 'warning');
+      return;
+    }
+    if (this.videoAula.transcricoes?.statusAvaliacao === 'Em Andamento') {
+      this.presentToast('A avaliação já está em andamento.', 'warning');
+      return;
+    }
+
+    this.videoAulaService.avaliarVideoAula(this.videoAula.id).subscribe({
+      next: () => {
+        if (this.videoAula?.transcricoes) {
+          this.videoAula.transcricoes.statusAvaliacao = 'Em Andamento';
+          this.videoAula.transcricoes.avaliacao = undefined;
+        }
+        this.avaliacao = null;
+        this.presentToast('Avaliação em andamento. O resultado aparece nesta página quando terminar.', 'success');
+        this.acompanharAvaliacao();
+      },
+      error: (err) => {
+        const mensagem = err?.error?.erro || err?.message || 'Erro ao avaliar o resumo.';
+        this.presentToast(mensagem, 'danger');
+      },
+    });
+  }
+
+  private aplicarAvaliacaoSalva() {
+    const transcricao = this.videoAula?.transcricoes;
+    if (transcricao?.statusAvaliacao === 'Concluído' && transcricao.avaliacao) {
+      try {
+        this.avaliacao = JSON.parse(transcricao.avaliacao);
+      } catch {
+        this.avaliacao = null;
+      }
+    }
+    if (transcricao?.statusAvaliacao === 'Em Andamento') {
+      this.acompanharAvaliacao();
+    }
+  }
+
+  private acompanharAvaliacao() {
+    if (this.acompanhamento || !this.videoAula?.id) {
+      return;
+    }
+    const id = this.videoAula.id;
+    this.acompanhamento = setInterval(() => {
+      this.videoAulaService.getVideoAulaById(id).subscribe({
+        next: (video) => {
+          if (!this.videoAula?.transcricoes || !video.transcricoes) {
+            return;
+          }
+          this.videoAula.transcricoes.statusAvaliacao = video.transcricoes.statusAvaliacao;
+          this.videoAula.transcricoes.avaliacao = video.transcricoes.avaliacao;
+          const status = video.transcricoes.statusAvaliacao;
+          if (status === 'Concluído') {
+            this.aplicarAvaliacaoSalva();
+            this.pararAcompanhamento();
+            this.presentToast('Avaliação concluída.', 'success');
+          } else if (status === 'Erro') {
+            this.pararAcompanhamento();
+            this.presentToast(video.transcricoes.avaliacao || 'Erro ao avaliar o resumo.', 'danger');
+          }
+        },
+      });
+    }, 5000);
+  }
+
+  private pararAcompanhamento() {
+    if (this.acompanhamento) {
+      clearInterval(this.acompanhamento);
+      this.acompanhamento = null;
+    }
   }
 
   async deleteVideoAula() {

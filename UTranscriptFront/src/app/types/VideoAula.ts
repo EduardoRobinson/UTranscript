@@ -8,6 +8,7 @@ export type FormVideoAula = {
   universidadeId:number;
   temaId: number;
   data:Date;
+  promptPersonalizado?: string;
 }
 
 export type StatusTranscription = {
@@ -19,6 +20,34 @@ export type Transcript = {
     id?: number;
     conteudo: string;
     status: StatusTranscription;
+    tipoExtracao?: string;
+    prompt?: string;
+    promptPersonalizado?: string;
+    statusAvaliacao?: string;
+    avaliacao?: string;
+}
+
+export type AvaliacaoIniciada = {
+    msg: string;
+    id: number;
+}
+
+export type NotasAderencia = {
+    adesao: number;
+    fidelidade: number;
+    cobertura: number;
+    organizacao: number;
+    nota: number;
+    justificativa?: string;
+}
+
+export type AvaliacaoAderencia = {
+    agregado: NotasAderencia;
+    amostras: NotasAderencia[];
+}
+
+export type AvaliacaoAula = {
+    aderencia: AvaliacaoAderencia;
 }
 
 export type Universidade = {
